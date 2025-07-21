@@ -1,0 +1,28 @@
+{
+  "functions": {
+    "api/chunking.py": {
+      "runtime": "python3.11",
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "api/evaluation.py": {
+      "runtime": "python3.11", 
+      "maxDuration": 120,
+      "memory": 2048
+    },
+    "api/analysis.py": {
+      "runtime": "python3.11",
+      "maxDuration": 30,
+      "memory": 512
+    }
+  },
+  "env": {
+    "VERCEL_FORCE_PYTHON_STREAMING": "1"
+  },
+  "regions": ["iad1"],
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install && pip install uv && uv sync"
+}
+
