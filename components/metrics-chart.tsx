@@ -65,7 +65,7 @@ export function MetricsChart({ naive, semantic, improvements }: MetricsChartProp
           <p className="font-medium">{label}</p>
           {payload.map((entry, index: number) => (
             <p key={index} style={{ color: entry.color }}>
-              {entry.dataKey === 'naive' ? 'Naive' : 'Semantic'}: {entry.value.toFixed(3)}
+              {entry.dataKey === 'naive' ? 'Naive' : 'Semantic'}: {entry.value != null ? entry.value.toFixed(3) : 'N/A'}
             </p>
           ))}
         </div>
@@ -81,7 +81,7 @@ export function MetricsChart({ naive, semantic, improvements }: MetricsChartProp
           <p className="font-medium">{label}</p>
           {payload.map((entry, index: number) => (
             <p key={index} style={{ color: entry.color }}>
-              {entry.dataKey === 'naive' ? 'Naive' : 'Semantic'}: {(entry.value / 100).toFixed(3)}
+              {entry.dataKey === 'naive' ? 'Naive' : 'Semantic'}: {entry.value != null ? (entry.value / 100).toFixed(3) : 'N/A'}
             </p>
           ))}
         </div>
@@ -112,11 +112,15 @@ export function MetricsChart({ naive, semantic, improvements }: MetricsChartProp
                 <div className="flex items-center justify-center gap-1">
                   {getImprovementIcon(item.improvement)}
                   <Badge variant={getImprovementColor(item.improvement) as 'success' | 'default' | 'destructive' | 'outline'}>
-                    {item.improvement > 0 ? '+' : ''}{item.improvement.toFixed(1)}%
+                    {item.improvement != null
+                      ? `${item.improvement > 0 ? '+' : ''}${item.improvement.toFixed(1)}%`
+                      : 'N/A'}
                   </Badge>
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {item.naive.toFixed(3)} → {item.semantic.toFixed(3)}
+                  {item.naive != null && item.semantic != null
+                    ? `${item.naive.toFixed(3)} → ${item.semantic.toFixed(3)}`
+                    : 'N/A'}
                 </div>
               </div>
             ))}
@@ -143,7 +147,7 @@ export function MetricsChart({ naive, semantic, improvements }: MetricsChartProp
                 />
                 <YAxis 
                   domain={[0, 1]}
-                  tickFormatter={(value) => value.toFixed(2)}
+                  tickFormatter={(value) => value != null ? value.toFixed(2) : '0'}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend />
@@ -230,14 +234,16 @@ export function MetricsChart({ naive, semantic, improvements }: MetricsChartProp
                 {barData.map((item) => (
                   <tr key={item.metric} className="border-b">
                     <td className="py-2 font-medium">{item.metric}</td>
-                    <td className="text-right py-2 font-mono">{item.naive.toFixed(4)}</td>
-                    <td className="text-right py-2 font-mono">{item.semantic.toFixed(4)}</td>
+                    <td className="text-right py-2 font-mono">{item.naive != null ? item.naive.toFixed(4) : 'N/A'}</td>
+                    <td className="text-right py-2 font-mono">{item.semantic != null ? item.semantic.toFixed(4) : 'N/A'}</td>
                     <td className="text-right py-2 font-mono">
                       <span className={
                         item.improvement > 0 ? 'text-green-600' : 
                         item.improvement < 0 ? 'text-red-600' : 'text-gray-600'
                       }>
-                        {item.improvement > 0 ? '+' : ''}{item.improvement.toFixed(1)}%
+                        {item.improvement != null
+                      ? `${item.improvement > 0 ? '+' : ''}${item.improvement.toFixed(1)}%`
+                      : 'N/A'}
                       </span>
                     </td>
                     <td className="text-center py-2">

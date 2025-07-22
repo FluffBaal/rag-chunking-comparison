@@ -5,12 +5,19 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatNumber(num: number, decimals: number = 2): string {
+export function formatNumber(num: number | null | undefined, decimals: number = 2): string {
+  if (num == null || isNaN(num)) return 'N/A'
   return num.toFixed(decimals)
 }
 
-export function formatPercentage(num: number, decimals: number = 1): string {
+export function formatPercentage(num: number | null | undefined, decimals: number = 1): string {
+  if (num == null || isNaN(num)) return 'N/A'
   return `${(num * 100).toFixed(decimals)}%`
+}
+
+export function safeToFixed(num: number | null | undefined, decimals: number = 2): string {
+  if (num == null || isNaN(num)) return 'N/A'
+  return num.toFixed(decimals)
 }
 
 export function calculateImprovement(baseline: number, improved: number): number {

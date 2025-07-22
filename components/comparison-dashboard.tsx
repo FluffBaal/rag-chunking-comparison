@@ -306,7 +306,9 @@ export function ComparisonDashboard() {
                 <p className="text-lg font-medium">{status.message}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <Badge variant="outline">
-                    Overall Improvement: {results.comparison.summary.overall_improvement.toFixed(1)}%
+                    Overall Improvement: {results.comparison.summary?.overall_improvement != null 
+                      ? `${results.comparison.summary.overall_improvement.toFixed(1)}%`
+                      : 'N/A'}
                   </Badge>
                   <Badge variant="outline">
                     Significant Metrics: {results.comparison.summary.significant_count}/{results.comparison.summary.total_metrics}
@@ -342,7 +344,9 @@ export function ComparisonDashboard() {
                     </div>
                     <div className="flex justify-between">
                       <span>Avg Length:</span>
-                      <span className="font-mono">{results.naive.chunking_quality.avg_length.toFixed(0)} chars</span>
+                      <span className="font-mono">{results.naive.chunking_quality?.avg_length != null
+                        ? `${results.naive.chunking_quality.avg_length.toFixed(0)} chars`
+                        : 'N/A'}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -358,7 +362,9 @@ export function ComparisonDashboard() {
                     </div>
                     <div className="flex justify-between">
                       <span>Avg Length:</span>
-                      <span className="font-mono">{results.semantic.chunking_quality.avg_length.toFixed(0)} chars</span>
+                      <span className="font-mono">{results.semantic.chunking_quality?.avg_length != null
+                        ? `${results.semantic.chunking_quality.avg_length.toFixed(0)} chars`
+                        : 'N/A'}</span>
                     </div>
                   </CardContent>
                 </Card>

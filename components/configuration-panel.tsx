@@ -174,7 +174,7 @@ export function ConfigurationPanel({ config, onConfigChange, disabled = false, a
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="similarity-threshold">Similarity Threshold</Label>
-              <Badge variant="outline">{config.similarity_threshold.toFixed(2)}</Badge>
+              <Badge variant="outline">{config.similarity_threshold != null ? config.similarity_threshold.toFixed(2) : 'N/A'}</Badge>
             </div>
             <Slider
               id="similarity-threshold"

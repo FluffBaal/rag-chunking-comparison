@@ -76,7 +76,9 @@ export function StatisticalSummary({ comparison }: StatisticalSummaryProps) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold">
-                {summary.overall_improvement > 0 ? '+' : ''}{summary.overall_improvement.toFixed(1)}%
+                {summary.overall_improvement != null 
+                  ? `${summary.overall_improvement > 0 ? '+' : ''}${summary.overall_improvement.toFixed(1)}%`
+                  : 'N/A'}
               </div>
               <div className="text-sm text-muted-foreground">Overall Improvement</div>
             </div>
@@ -123,7 +125,9 @@ export function StatisticalSummary({ comparison }: StatisticalSummaryProps) {
                 {summary.best_improvement?.metric.replace('_', ' ') || 'N/A'}
               </div>
               <div className="text-2xl font-bold text-green-600">
-                +{summary.best_improvement?.improvement.toFixed(1) || 0}%
+                {summary.best_improvement?.improvement != null
+                  ? `+${summary.best_improvement.improvement.toFixed(1)}%`
+                  : 'N/A'}
               </div>
               <div className="text-sm text-muted-foreground">
                 This metric showed the strongest improvement with semantic chunking
@@ -145,7 +149,9 @@ export function StatisticalSummary({ comparison }: StatisticalSummaryProps) {
                 {summary.worst_improvement?.metric.replace('_', ' ') || 'N/A'}
               </div>
               <div className="text-2xl font-bold text-red-600">
-                {summary.worst_improvement?.improvement.toFixed(1) || 0}%
+                {summary.worst_improvement?.improvement != null
+                  ? `${summary.worst_improvement.improvement.toFixed(1)}%`
+                  : 'N/A'}
               </div>
               <div className="text-sm text-muted-foreground">
                 This metric showed the least improvement or declined
@@ -189,7 +195,8 @@ export function StatisticalSummary({ comparison }: StatisticalSummaryProps) {
                         {metric.replace('_', ' ')}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        p-value: {test.p_value.toFixed(4)} | Effect size: {test.effect_size.toFixed(3)}
+                        p-value: {test.p_value != null ? test.p_value.toFixed(4) : 'N/A'} | 
+                        Effect size: {test.effect_size != null ? test.effect_size.toFixed(3) : 'N/A'}
                       </div>
                     </div>
                     
@@ -253,9 +260,11 @@ export function StatisticalSummary({ comparison }: StatisticalSummaryProps) {
             <h4 className="font-medium">Key Findings:</h4>
             <ul className="text-sm space-y-1 text-muted-foreground">
               <li>• {summary.significant_count || 0} out of {summary.total_metrics || 0} metrics showed statistically significant improvements</li>
-              <li>• Overall performance improvement of {summary.overall_improvement.toFixed(1)}%</li>
+              <li>• Overall performance improvement of {summary.overall_improvement != null ? `${summary.overall_improvement.toFixed(1)}%` : 'N/A'}</li>
               <li>• Confidence level: {summary.confidence_level || 'N/A'}</li>
-              {summary.best_improvement && <li>• Best performing metric: {summary.best_improvement.metric.replace('_', ' ')} (+{summary.best_improvement.improvement.toFixed(1)}%)</li>}
+              {summary.best_improvement && summary.best_improvement.improvement != null && (
+                <li>• Best performing metric: {summary.best_improvement.metric.replace('_', ' ')} (+{summary.best_improvement.improvement.toFixed(1)}%)</li>
+              )}
             </ul>
           </div>
         </CardContent>

@@ -113,7 +113,7 @@ export function ChunkVisualizer({ naiveChunks, semanticChunks }: ChunkVisualizer
             </div>
             <div className="flex justify-between">
               <span>Avg Length:</span>
-              <span className="font-mono">{naiveStats.avgLength.toFixed(0)} chars</span>
+              <span className="font-mono">{naiveStats.avgLength != null ? `${naiveStats.avgLength.toFixed(0)} chars` : 'N/A'}</span>
             </div>
             <div className="flex justify-between">
               <span>Length Range:</span>
@@ -121,7 +121,7 @@ export function ChunkVisualizer({ naiveChunks, semanticChunks }: ChunkVisualizer
             </div>
             <div className="flex justify-between">
               <span>Avg Words:</span>
-              <span className="font-mono">{naiveStats.avgWords.toFixed(0)}</span>
+              <span className="font-mono">{naiveStats.avgWords != null ? naiveStats.avgWords.toFixed(0) : 'N/A'}</span>
             </div>
             <div className="flex justify-between">
               <span>Total Words:</span>
@@ -144,7 +144,7 @@ export function ChunkVisualizer({ naiveChunks, semanticChunks }: ChunkVisualizer
             </div>
             <div className="flex justify-between">
               <span>Avg Length:</span>
-              <span className="font-mono">{semanticStats.avgLength.toFixed(0)} chars</span>
+              <span className="font-mono">{semanticStats.avgLength != null ? `${semanticStats.avgLength.toFixed(0)} chars` : 'N/A'}</span>
             </div>
             <div className="flex justify-between">
               <span>Length Range:</span>
@@ -152,7 +152,7 @@ export function ChunkVisualizer({ naiveChunks, semanticChunks }: ChunkVisualizer
             </div>
             <div className="flex justify-between">
               <span>Avg Words:</span>
-              <span className="font-mono">{semanticStats.avgWords.toFixed(0)}</span>
+              <span className="font-mono">{semanticStats.avgWords != null ? semanticStats.avgWords.toFixed(0) : 'N/A'}</span>
             </div>
             <div className="flex justify-between">
               <span>Total Words:</span>
