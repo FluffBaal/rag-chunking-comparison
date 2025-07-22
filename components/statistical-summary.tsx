@@ -122,7 +122,9 @@ export function StatisticalSummary({ comparison }: StatisticalSummaryProps) {
           <CardContent>
             <div className="space-y-2">
               <div className="text-lg font-semibold capitalize">
-                {summary.best_improvement?.metric.replace('_', ' ') || 'N/A'}
+                {summary.best_improvement?.metric && typeof summary.best_improvement.metric === 'string' 
+                  ? summary.best_improvement.metric.replace('_', ' ') 
+                  : 'N/A'}
               </div>
               <div className="text-2xl font-bold text-green-600">
                 {summary.best_improvement?.improvement != null
@@ -146,7 +148,9 @@ export function StatisticalSummary({ comparison }: StatisticalSummaryProps) {
           <CardContent>
             <div className="space-y-2">
               <div className="text-lg font-semibold capitalize">
-                {summary.worst_improvement?.metric.replace('_', ' ') || 'N/A'}
+                {summary.worst_improvement?.metric && typeof summary.worst_improvement.metric === 'string'
+                  ? summary.worst_improvement.metric.replace('_', ' ')
+                  : 'N/A'}
               </div>
               <div className="text-2xl font-bold text-red-600">
                 {summary.worst_improvement?.improvement != null
@@ -178,12 +182,12 @@ export function StatisticalSummary({ comparison }: StatisticalSummaryProps) {
               const getExplanation = () => {
                 if (test.significant) {
                   if (test.effect_size > 0) {
-                    return `Semantic chunking performs measurably better for ${metric.replace('_', ' ')}. This improvement is statistically reliable.`;
+                    return `Semantic chunking performs measurably better for ${typeof metric === 'string' ? metric.replace('_', ' ') : metric}. This improvement is statistically reliable.`;
                   } else {
-                    return `Naive chunking actually performs better for ${metric.replace('_', ' ')}. This difference is statistically reliable.`;
+                    return `Naive chunking actually performs better for ${typeof metric === 'string' ? metric.replace('_', ' ') : metric}. This difference is statistically reliable.`;
                   }
                 } else {
-                  return `The performance difference for ${metric.replace('_', ' ')} could be due to random variation. More data needed.`;
+                  return `The performance difference for ${typeof metric === 'string' ? metric.replace('_', ' ') : metric} could be due to random variation. More data needed.`;
                 }
               };
               
@@ -192,7 +196,7 @@ export function StatisticalSummary({ comparison }: StatisticalSummaryProps) {
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="font-medium capitalize">
-                        {metric.replace('_', ' ')}
+                        {typeof metric === 'string' ? metric.replace('_', ' ') : metric}
                       </div>
                       <div className="text-sm text-muted-foreground">
                         p-value: {test.p_value != null ? test.p_value.toFixed(4) : 'N/A'} | 
@@ -263,7 +267,7 @@ export function StatisticalSummary({ comparison }: StatisticalSummaryProps) {
               <li>• Overall performance improvement of {summary.overall_improvement != null ? `${summary.overall_improvement.toFixed(1)}%` : 'N/A'}</li>
               <li>• Confidence level: {summary.confidence_level || 'N/A'}</li>
               {summary.best_improvement && summary.best_improvement.improvement != null && (
-                <li>• Best performing metric: {summary.best_improvement.metric.replace('_', ' ')} (+{summary.best_improvement.improvement.toFixed(1)}%)</li>
+                <li>• Best performing metric: {typeof summary.best_improvement.metric === 'string' ? summary.best_improvement.metric.replace('_', ' ') : 'Unknown'} (+{summary.best_improvement.improvement.toFixed(1)}%)</li>
               )}
             </ul>
           </div>

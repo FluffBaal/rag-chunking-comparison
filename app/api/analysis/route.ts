@@ -122,7 +122,10 @@ function calculateAverageImprovement(analysis: any): number {
   return Math.round(sum / improvements.length * 10) / 10;
 }
 
-function formatMetricName(metric: string): string {
+function formatMetricName(metric: string | any): string {
+  if (!metric || typeof metric !== 'string') {
+    return 'Unknown Metric';
+  }
   return metric
     .split('_')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))

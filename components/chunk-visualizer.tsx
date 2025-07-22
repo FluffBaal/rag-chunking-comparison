@@ -10,17 +10,25 @@ import { Separator } from '@/components/ui/separator';
 import { Eye, EyeOff, FileText } from 'lucide-react';
 
 interface ChunkVisualizerProps {
-  naiveChunks: string[];
-  semanticChunks: string[];
+  naiveChunks: Array<string | { text: string; metadata?: any }>;
+  semanticChunks: Array<string | { text: string; metadata?: any }>;
 }
 
 export function ChunkVisualizer({ naiveChunks, semanticChunks }: ChunkVisualizerProps) {
   const [showBoundaries, setShowBoundaries] = useState(true);
   const [selectedChunk, setSelectedChunk] = useState<{type: 'naive' | 'semantic', index: number} | null>(null);
 
-  const getChunkStats = (chunks: string[]) => {
-    const lengths = chunks.map(chunk => chunk.length);
-    const wordCounts = chunks.map(chunk => chunk.split(/\s+/).length);
+  // Helper function to extract text from chunk
+  const getChunkText = (chunk: string | { text: string; metadata?: any }): string => {
+    if (typeof chunk === 'string') return chunk;
+    if (chunk && typeof chunk === 'object' && 'text' in chunk) return chunk.text;
+    return '';
+  };
+
+  const getChunkStats = (chunks: Array<string | { text: string; metadata?: any }>) => {
+    const chunkTexts = chunks.map(getChunkText);
+    const lengths = chunkTexts.map(text => text.length);
+    const wordCounts = chunkTexts.map(text => text.split(/\s+/).length);
     
     return {
       count: chunks.length,
@@ -40,7 +48,9 @@ export function ChunkVisualizer({ naiveChunks, semanticChunks }: ChunkVisualizer
     
     return (
       <div className="space-y-2">
-        {chunks.map((chunk, index) => (
+        {chunks.map((chunk, index) => {
+          const chunkText = getChunkText(chunk);
+          return (
           <div
             key={index}
             className={`${colorClass} cursor-pointer transition-all hover:shadow-md ${
@@ -55,15 +65,16 @@ export function ChunkVisualizer({ naiveChunks, semanticChunks }: ChunkVisualizer
                 Chunk {index + 1}
               </Badge>
               <div className="flex gap-2 text-xs text-muted-foreground">
-                <span>{chunk.length} chars</span>
-                <span>{chunk.split(/\s+/).length} words</span>
+                <span>{chunkText.length} chars</span>
+                <span>{chunkText.split(/\s+/).length} words</span>
               </div>
             </div>
             <p className="text-sm leading-relaxed">
-              {chunk.length > 300 ? `${chunk.substring(0, 300)}...` : chunk}
+              {chunkText.length > 300 ? `${chunkText.substring(0, 300)}...` : chunkText}
             </p>
           </div>
-        ))}
+          );
+        })}
       </div>
     );
   };
@@ -243,24 +254,24 @@ export function ChunkVisualizer({ naiveChunks, semanticChunks }: ChunkVisualizer
                   <span className="text-muted-foreground">Length:</span>
                   <div className="font-mono">
                     {selectedChunk.type === 'naive' 
-                      ? naiveChunks[selectedChunk.index].length 
-                      : semanticChunks[selectedChunk.index].length} chars
+                      ? getChunkText(naiveChunks[selectedChunk.index]).length 
+                      : getChunkText(semanticChunks[selectedChunk.index]).length} chars
                   </div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Words:</span>
                   <div className="font-mono">
                     {selectedChunk.type === 'naive' 
-                      ? naiveChunks[selectedChunk.index].split(/\s+/).length
-                      : semanticChunks[selectedChunk.index].split(/\s+/).length}
+                      ? getChunkText(naiveChunks[selectedChunk.index]).split(/\s+/).length
+                      : getChunkText(semanticChunks[selectedChunk.index]).split(/\s+/).length}
                   </div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Sentences:</span>
                   <div className="font-mono">
                     {selectedChunk.type === 'naive' 
-                      ? naiveChunks[selectedChunk.index].split(/[.!?]+/).filter(s => s.trim()).length
-                      : semanticChunks[selectedChunk.index].split(/[.!?]+/).filter(s => s.trim()).length}
+                      ? getChunkText(naiveChunks[selectedChunk.index]).split(/[.!?]+/).filter(s => s.trim()).length
+                      : getChunkText(semanticChunks[selectedChunk.index]).split(/[.!?]+/).filter(s => s.trim()).length}
                   </div>
                 </div>
                 <div>
@@ -276,8 +287,8 @@ export function ChunkVisualizer({ naiveChunks, semanticChunks }: ChunkVisualizer
                 <ScrollArea className="h-40 w-full rounded border p-3">
                   <p className="text-sm leading-relaxed whitespace-pre-wrap">
                     {selectedChunk.type === 'naive' 
-                      ? naiveChunks[selectedChunk.index]
-                      : semanticChunks[selectedChunk.index]}
+                      ? getChunkText(naiveChunks[selectedChunk.index])
+                      : getChunkText(semanticChunks[selectedChunk.index])}
                   </p>
                 </ScrollArea>
               </div>
