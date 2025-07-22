@@ -1,0 +1,8 @@
+This file was created to debug Vercel deployment issues.
+Created at commit: 7f767c7
+Date: 2025-07-22
+
+If you see this file in your Vercel deployment, it means the latest code is being used.
+If not, Vercel is using an older commit.
+
+The ESLint fixes were applied in commit: 016452f

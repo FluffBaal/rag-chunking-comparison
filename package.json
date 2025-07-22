@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbo --port 4042",
-    "build": "next build",
+    "build": "./scripts/vercel-build.sh",
+    "build:next": "next build",
     "prebuild:vercel": "echo 'Current commit:' && git rev-parse HEAD && echo 'Files in app/api:' && ls -la app/api/",
     "build:vercel": "next build",
     "build:prod": "next build",
