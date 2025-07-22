@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a RAG (Retrieval-Augmented Generation) chunking comparison application that evaluates different text chunking strategies using RAGAS metrics. It consists of a Next.js frontend with Python serverless backend functions that can be deployed on Vercel or run locally.
+This is a RAG (Retrieval-Augmented Generation) chunking comparison application that evaluates different text chunking strategies using RAGAS metrics. It's a Next.js frontend application that can be deployed on Vercel. For full functionality with real chunking and evaluation, a separate Python backend can be deployed.
 
 ## Development Commands
 
@@ -29,88 +29,46 @@ npm run lint
 npm run type-check
 ```
 
-### Local Development Setup
-For local development, you need to run both the Next.js frontend and Python API server:
+### Deployment
+The application is designed to be deployed on Vercel as a frontend-only application. The API routes return demo data to showcase the functionality.
 
-1. **Terminal 1 - Python API Server:**
-```bash
-# Make sure Python dependencies are installed
-uv sync
-
-# Run the Python development server (Flask-based)
-uv run python run-dev-server.py 8001
-```
-
-2. **Terminal 2 - Next.js Frontend:**
-```bash
-# Run the Next.js development server
-npm run dev
-```
-
-The Python server runs on port 8001 and handles the API endpoints locally.
-The Next.js server runs on port 4042 and proxies API requests to the Python server in development mode.
-
-### Python Backend (uv)
-```bash
-# Install uv if not already installed
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Create virtual environment and install dependencies
-uv sync
-
-# Activate virtual environment (optional, uv handles this automatically)
-source .venv/bin/activate  # On Unix/macOS
-# or
-.venv\Scripts\activate  # On Windows
-
-# Install additional development dependencies
-uv sync --all-extras
-
-# Add a new dependency
-uv add <package-name>
-
-# Add a development dependency
-uv add --dev <package-name>
-
-# Test API key (if using OpenAI features)
-uv run python api/test-api-key.py
-
-# Run any Python script with uv
-uv run python <script.py>
-```
+For full functionality with real chunking, evaluation, and analysis:
+1. Deploy the Python backend separately (e.g., on Railway, Render, or AWS Lambda)
+2. Update the API routes to point to your Python backend
+3. Or implement the logic in TypeScript (work in progress)
 
 ## Architecture Overview
 
 ### Tech Stack
 - **Frontend**: Next.js 15 with TypeScript, React 19, Tailwind CSS
-- **Backend**: Python serverless functions on Vercel
-- **UI Components**: Radix UI primitives with custom styling
+- **UI Components**: Radix UI primitives with custom styling  
 - **Data Visualization**: Recharts for metrics charts
-- **ML/NLP**: Sentence Transformers, NLTK, OpenAI API (optional)
-- **Python Package Management**: uv (fast Python package installer and resolver)
+- **PDF Processing**: WebPDFLoader from LangChain.js (client-side)
+- **API Integration**: OpenAI API (optional, user provides key)
 
 ### Key Architectural Patterns
 
-1. **Hybrid Architecture**: Next.js frontend communicates with Python backend via REST APIs
-2. **Serverless Functions**: Each Python API endpoint runs as an independent Vercel function with specific resource allocations
-3. **Progressive Enhancement**: Application works without OpenAI API key using simulation mode
+1. **Frontend-First Architecture**: Next.js application with demo functionality
+2. **Progressive Enhancement**: Application works without OpenAI API key using demo mode
+3. **Client-Side Processing**: PDF extraction happens in the browser
+4. **Optional Backend**: Python backend can be deployed separately for full functionality
 
 ### API Endpoints
 
-1. **`/api/chunking`** (Python)
-   - Implements two chunking strategies: Semantic and Naive
-   - Returns chunks for comparison
-   - Runtime: 60s timeout, 1GB memory
+1. **`/api/chunking`** (TypeScript/Demo)
+   - Returns demo chunks for both strategies
+   - In production: Shows demo data
+   - In development: Can proxy to Python backend if running
 
-2. **`/api/evaluation`** (Python)
-   - Evaluates chunks using RAGAS metrics
-   - Simulates RAG pipeline (retrieval + generation)
-   - Runtime: 120s timeout, 2GB memory
+2. **`/api/evaluation`** (TypeScript/Demo)
+   - Returns demo RAGAS metrics
+   - In production: Shows demo evaluation results
+   - In development: Can proxy to Python backend if running
 
-3. **`/api/analysis`** (Python)
-   - Statistical comparison of strategies
-   - Provides recommendations and significance testing
-   - Runtime: 30s timeout, 512MB memory
+3. **`/api/analysis`** (TypeScript/Demo)
+   - Returns demo statistical analysis
+   - In production: Shows demo comparison results
+   - In development: Can proxy to Python backend if running
 
 4. **`/api/models`** (TypeScript/Next.js)
    - Fetches available OpenAI models when API key is provided
