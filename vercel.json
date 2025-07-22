@@ -36,6 +36,6 @@
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
-  "installCommand": "npm install && pip install uv && uv sync"
+  "installCommand": "npm install"
 }
 
