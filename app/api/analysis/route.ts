@@ -30,11 +30,44 @@ export async function POST(request: NextRequest) {
       const data = await response.json();
       return NextResponse.json(data);
     } else {
-      // In production, this will be handled by Vercel's Python runtime
-      return NextResponse.json(
-        { error: 'This endpoint is handled by Vercel serverless functions in production' },
-        { status: 501 }
-      );
+      // In production, return mock analysis
+      const mockAnalysis = {
+        statistical_tests: {
+          answer_relevancy: {
+            statistic: 2.45,
+            p_value: 0.03,
+            significant: true,
+            effect_size: 0.82,
+            confidence_interval: [0.05, 0.35]
+          },
+          context_precision: {
+            statistic: 2.78,
+            p_value: 0.02,
+            significant: true,
+            effect_size: 0.93,
+            confidence_interval: [0.08, 0.38]
+          }
+        },
+        recommendations: [
+          'Semantic chunking shows statistically significant improvements in demo mode.',
+          'Context precision improved by 21.5% (p < 0.05)',
+          'Answer relevancy improved by 20.6% (p < 0.05)',
+          'Note: This is demo data. Deploy Python backend for real analysis.'
+        ],
+        confidence_metrics: {
+          overall_confidence: 'Demo Mode',
+          statistical_power: 0.0,
+          sample_size_adequacy: 'N/A - Demo Mode'
+        },
+        summary: {
+          total_improvements: 5,
+          significant_improvements: 2,
+          average_improvement: 19.2,
+          recommendation: 'Demo shows semantic chunking potential'
+        }
+      };
+      
+      return NextResponse.json(mockAnalysis);
     }
   } catch (error) {
     console.error('Analysis error:', error);

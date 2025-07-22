@@ -44,11 +44,15 @@ export async function POST(request: NextRequest) {
       const data = await response.json();
       return NextResponse.json(data);
     } else {
-      // In production, this will be handled by Vercel's Python runtime
-      return NextResponse.json(
-        { error: 'This endpoint is handled by Vercel serverless functions in production' },
-        { status: 501 }
-      );
+      // In production, return a message about PDF extraction
+      return NextResponse.json({
+        text: 'PDF extraction requires Python backend. This is a demo response.\n\nFor full functionality, deploy the Python API separately.',
+        page_count: 1,
+        metadata: {
+          note: 'PDF extraction disabled in demo mode',
+          suggestion: 'Deploy Python backend with PyPDF2 for real PDF processing'
+        }
+      });
     }
   } catch (error) {
     console.error('PDF extraction error:', error);
