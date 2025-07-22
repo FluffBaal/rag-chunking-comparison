@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   description: 'Compare semantic vs naive chunking strategies for RAG systems',
   keywords: ['RAG', 'chunking', 'semantic', 'machine learning', 'NLP'],
   authors: [{ name: 'RAG Research Team' }],
+  icons: {
+    icon: '/favicon.ico',
+  },
   openGraph: {
     title: 'RAG Chunking Comparison',
     description: 'Compare semantic vs naive chunking strategies for RAG systems',
