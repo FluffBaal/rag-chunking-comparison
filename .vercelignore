@@ -1,13 +1,14 @@
-# Ignore Python API files for Vercel deployment
-api/*.py
+# Ignore old Python implementations
+api/*_old.py
 api/__pycache__
 *.pyc
-requirements*.txt
-pyproject.toml
-uv.lock
 .venv
 venv
 ml_imports.py
+
+# Ignore large requirements files
+requirements-full.txt
+requirements-minimal.txt
 
 # Ignore ESLint config during deployment
 .eslintrc*
