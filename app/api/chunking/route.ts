@@ -1,96 +1,90 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { naiveChunking, calculateNaiveMetrics } from '@/lib/chunking/naive';
+import { semanticChunking, calculateSemanticMetrics } from '@/lib/chunking/semantic';
 
 export async function POST(request: NextRequest) {
   try {
-    // In development, proxy to the Python dev server
-    const isDev = process.env.NODE_ENV === 'development';
-    const pythonUrl = isDev ? 'http://localhost:8001' : '';
+    const body = await request.json();
+    const { document, config } = body;
+    const apiKey = request.headers.get('x-api-key') || undefined;
     
-    if (isDev) {
-      const body = await request.json();
-      const apiKey = request.headers.get('x-api-key');
-      
-      const response = await fetch(`${pythonUrl}/api/chunking`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(apiKey && { 'x-api-key': apiKey }),
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        return NextResponse.json(
-          { error: error || 'Chunking failed' },
-          { status: response.status }
-        );
-      }
-
-      const data = await response.json();
-      return NextResponse.json(data);
-    } else {
-      // In production, return mock data for demo purposes
-      const body = await request.json();
-      const { document, config } = body;
-      
-      const mockResponse = {
-        results: {
-          naive: {
-            strategy: 'naive',
-            chunks: [
-              { text: 'This is a demo chunk 1 using naive strategy.', metadata: { index: 0 } },
-              { text: 'This is a demo chunk 2 using naive strategy.', metadata: { index: 1 } }
-            ],
-            quality_metrics: {
-              coherence_score: 0.75,
-              avg_chunk_length: 45,
-              length_variance: 5.2,
-              total_chunks: 2
-            },
-            strategy_info: {
-              chunk_size: config?.chunk_size || 400,
-              overlap: config?.overlap || 50
-            }
-          },
-          semantic: {
-            strategy: 'semantic',
-            chunks: [
-              { text: 'This is a semantically coherent demo chunk.', metadata: { index: 0 } },
-              { text: 'This represents another semantic unit.', metadata: { index: 1 } }
-            ],
-            quality_metrics: {
-              coherence_score: 0.88,
-              avg_chunk_length: 42,
-              length_variance: 3.1,
-              total_chunks: 2
-            },
-            strategy_info: {
-              similarity_threshold: config?.similarity_threshold || 0.7,
-              max_tokens: config?.max_tokens || 400,
-              min_tokens: config?.min_tokens || 75
-            }
+    if (!document || typeof document !== 'string') {
+      return NextResponse.json(
+        { error: 'Document text is required' },
+        { status: 400 }
+      );
+    }
+    
+    const startTime = Date.now();
+    
+    // Perform naive chunking
+    const naiveChunks = naiveChunking(document, {
+      chunk_size: config?.chunk_size || 400,
+      overlap: config?.overlap || 50,
+      model: config?.model || 'gpt-3.5-turbo'
+    });
+    
+    const naiveMetrics = calculateNaiveMetrics(naiveChunks);
+    
+    // Perform semantic chunking
+    const semanticChunks = await semanticChunking(document, {
+      similarity_threshold: config?.similarity_threshold || 0.7,
+      max_tokens: config?.max_tokens || 400,
+      min_tokens: config?.min_tokens || 75,
+      model: config?.model || 'gpt-3.5-turbo',
+      apiKey
+    });
+    
+    const semanticMetrics = calculateSemanticMetrics(semanticChunks);
+    
+    // Calculate comparison metrics
+    const coherenceImprovement = ((semanticMetrics.coherence_score - naiveMetrics.coherence_score) / naiveMetrics.coherence_score) * 100;
+    const consistencyImprovement = naiveMetrics.length_variance > 0 
+      ? ((naiveMetrics.length_variance - semanticMetrics.length_variance) / naiveMetrics.length_variance) * 100
+      : 0;
+    
+    const response = {
+      results: {
+        naive: {
+          strategy: 'naive',
+          chunks: naiveChunks,
+          quality_metrics: naiveMetrics,
+          strategy_info: {
+            chunk_size: config?.chunk_size || 400,
+            overlap: config?.overlap || 50
           }
         },
-        comparison: {
-          coherence_improvement: 17.3,
-          consistency_improvement: 15.2,
-          chunks_difference: 0
-        },
-        metadata: {
-          processing_time: 0.5,
-          document_length: document?.length || 100,
-          api_version: '1.0.0',
-          note: 'This is a demo response. Deploy Python backend separately for real functionality.'
+        semantic: {
+          strategy: 'semantic',
+          chunks: semanticChunks,
+          quality_metrics: semanticMetrics,
+          strategy_info: {
+            similarity_threshold: config?.similarity_threshold || 0.7,
+            max_tokens: config?.max_tokens || 400,
+            min_tokens: config?.min_tokens || 75,
+            uses_embeddings: !!apiKey
+          }
         }
-      };
-      
-      return NextResponse.json(mockResponse);
-    }
+      },
+      comparison: {
+        coherence_improvement: Math.round(coherenceImprovement * 10) / 10,
+        consistency_improvement: Math.round(consistencyImprovement * 10) / 10,
+        chunks_difference: semanticChunks.length - naiveChunks.length
+      },
+      metadata: {
+        processing_time: (Date.now() - startTime) / 1000,
+        document_length: document.length,
+        api_version: '2.0.0',
+        mode: apiKey ? 'full' : 'limited'
+      }
+    };
+    
+    return NextResponse.json(response);
+    
   } catch (error) {
     console.error('Chunking error:', error);
     return NextResponse.json(
-      { error: 'Internal server error. Make sure the Python dev server is running on port 8001.' },
+      { error: 'Failed to process document. ' + (error instanceof Error ? error.message : 'Unknown error') },
       { status: 500 }
     );
   }

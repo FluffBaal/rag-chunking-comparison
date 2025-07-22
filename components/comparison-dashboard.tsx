@@ -187,25 +187,6 @@ export function ComparisonDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Demo Mode Notice - Only show in production */}
-      {process.env.NODE_ENV === 'production' && (
-        <Card className="bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5" />
-              <div className="space-y-1 text-sm">
-                <p className="font-medium text-amber-900 dark:text-amber-100">
-                  Demo Mode - Limited Functionality
-                </p>
-                <p className="text-amber-700 dark:text-amber-300">
-                  This deployment is running without Python ML dependencies to meet Vercel&apos;s size limits. 
-                  API responses are simulated. For full functionality, deploy the Python backend separately.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* API Key Input */}
       <ApiKeyInput onApiKeyChange={handleApiKeyChange} />
