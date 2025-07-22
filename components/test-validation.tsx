@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckCircle, XCircle, AlertCircle, FileText, MessageSquare, Target } from 'lucide-react';
+import { AlertCircle, FileText, MessageSquare, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 
@@ -207,7 +207,7 @@ export function TestValidation({ naiveDetails, semanticDetails, testDataset, nai
 
                     {!expandedItems.has(index) && (
                       <p className="text-xs text-muted-foreground text-center mt-2">
-                        Click "Show Details" to view full contexts
+                        Click &quot;Show Full Context&quot; to view full contexts
                       </p>
                     )}
                   </TabsContent>

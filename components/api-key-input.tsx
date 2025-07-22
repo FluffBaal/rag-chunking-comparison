@@ -75,7 +75,7 @@ export function ApiKeyInput({ onApiKeyChange }: ApiKeyInputProps) {
           if (!modelsResponse.ok) {
             console.warn('Could not fetch models, but API key is valid');
           }
-        } catch (e) {
+        } catch {
           console.warn('Could not fetch models, but API key is valid');
         }
       } else {
@@ -186,7 +186,7 @@ export function ApiKeyInput({ onApiKeyChange }: ApiKeyInputProps) {
             )}
             
             <div className="text-sm text-muted-foreground">
-              <p>Don't have an API key? You can still use the application with simulated results.</p>
+              <p>Don&apos;t have an API key? You can still use the application with simulated results.</p>
               <p className="mt-1">Get an API key from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">OpenAI</a>.</p>
             </div>
           </div>

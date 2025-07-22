@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Eye, EyeOff, BarChart3, FileText } from 'lucide-react';
+import { Eye, EyeOff, FileText } from 'lucide-react';
 
 interface ChunkVisualizerProps {
   naiveChunks: string[];
@@ -69,7 +69,6 @@ export function ChunkVisualizer({ naiveChunks, semanticChunks }: ChunkVisualizer
   };
 
   const renderSideBySide = () => {
-    const maxChunks = Math.max(naiveChunks.length, semanticChunks.length);
     
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

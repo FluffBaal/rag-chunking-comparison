@@ -1,5 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Define interfaces for type safety
+interface Model {
+  id: string;
+  created: number;
+  object: string;
+  owned_by?: string;
+}
+
+interface ModelsResponse {
+  data: Model[];
+  object: string;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const apiKey = request.headers.get('x-api-key');
@@ -26,11 +39,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const data = await response.json();
+    const data: ModelsResponse = await response.json();
     
     // Filter and sort models that are suitable for text generation
     const textModels = data.data
-      .filter((model: any) => {
+      .filter((model: Model) => {
         const modelId = model.id.toLowerCase();
         // Include GPT models and text generation models
         return (
@@ -42,7 +55,7 @@ export async function GET(request: NextRequest) {
           modelId.includes('ada')
         ) && !modelId.includes('embed') && !modelId.includes('whisper') && !modelId.includes('tts');
       })
-      .sort((a: any, b: any) => {
+      .sort((a: Model, b: Model) => {
         // Sort by model name, with GPT-4 models first, then GPT-3.5
         const aId = a.id.toLowerCase();
         const bId = b.id.toLowerCase();
@@ -54,7 +67,7 @@ export async function GET(request: NextRequest) {
         
         return a.id.localeCompare(b.id);
       })
-      .map((model: any) => ({
+      .map((model: Model) => ({
         id: model.id,
         name: formatModelName(model.id),
         created: model.created,

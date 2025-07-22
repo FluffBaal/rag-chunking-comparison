@@ -89,7 +89,7 @@ export function StatisticalSummary({ comparison }: StatisticalSummaryProps) {
             </div>
             
             <div className="text-center">
-              <Badge variant={getConfidenceColor(summary.confidence_level || 'N/A') as any} className="text-sm">
+              <Badge variant={getConfidenceColor(summary.confidence_level || 'N/A') as 'success' | 'default' | 'warning' | 'destructive' | 'outline'} className="text-sm">
                 {summary.confidence_level || 'N/A'} Confidence
               </Badge>
             </div>
@@ -194,7 +194,7 @@ export function StatisticalSummary({ comparison }: StatisticalSummaryProps) {
                     </div>
                     
                     <div className="flex items-center gap-2">
-                      <Badge variant={effectSize.color as any}>
+                      <Badge variant={effectSize.color as 'success' | 'default' | 'warning' | 'outline'}>
                         {effectSize.label} Effect
                       </Badge>
                       <Badge variant={test.significant ? 'success' : 'outline'}>
@@ -228,8 +228,8 @@ export function StatisticalSummary({ comparison }: StatisticalSummaryProps) {
                 </ul>
               </div>
               <div>
-                <strong>Significant vs Not Significant:</strong> "Significant" means we're confident the difference is real. 
-                "Not Significant" means we can't rule out random chance.
+                <strong>Significant vs Not Significant:</strong> &quot;Significant&quot; means we&apos;re confident the difference is real. 
+                &quot;Not Significant&quot; means we can&apos;t rule out random chance.
               </div>
             </div>
           </div>

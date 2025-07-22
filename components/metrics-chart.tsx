@@ -48,12 +48,22 @@ export function MetricsChart({ naive, semantic, improvements }: MetricsChartProp
     return 'outline';
   };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  interface TooltipProps {
+    active?: boolean;
+    payload?: Array<{
+      dataKey: string;
+      value: number;
+      color: string;
+    }>;
+    label?: string;
+  }
+
+  const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-background border rounded-lg p-3 shadow-lg">
           <p className="font-medium">{label}</p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry, index: number) => (
             <p key={index} style={{ color: entry.color }}>
               {entry.dataKey === 'naive' ? 'Naive' : 'Semantic'}: {entry.value.toFixed(3)}
             </p>
@@ -64,12 +74,12 @@ export function MetricsChart({ naive, semantic, improvements }: MetricsChartProp
     return null;
   };
 
-  const RadarTooltip = ({ active, payload, label }: any) => {
+  const RadarTooltip = ({ active, payload, label }: TooltipProps) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-background border rounded-lg p-3 shadow-lg">
           <p className="font-medium">{label}</p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry, index: number) => (
             <p key={index} style={{ color: entry.color }}>
               {entry.dataKey === 'naive' ? 'Naive' : 'Semantic'}: {(entry.value / 100).toFixed(3)}
             </p>
@@ -101,7 +111,7 @@ export function MetricsChart({ naive, semantic, improvements }: MetricsChartProp
                 <div className="text-sm font-medium">{item.metric}</div>
                 <div className="flex items-center justify-center gap-1">
                   {getImprovementIcon(item.improvement)}
-                  <Badge variant={getImprovementColor(item.improvement) as any}>
+                  <Badge variant={getImprovementColor(item.improvement) as 'success' | 'default' | 'destructive' | 'outline'}>
                     {item.improvement > 0 ? '+' : ''}{item.improvement.toFixed(1)}%
                   </Badge>
                 </div>

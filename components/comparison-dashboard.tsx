@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -13,7 +13,6 @@ import { ConfigurationPanel } from './configuration-panel';
 import { ApiKeyInput } from './api-key-input';
 import { LoadingSpinner } from './loading-spinner';
 import { TestValidation } from './test-validation';
-import { TestGenerationInfo } from './test-generation-info';
 import { AlertCircle, CheckCircle, TrendingUp, TrendingDown, Zap, Info } from 'lucide-react';
 import { ComparisonResults, ChunkingConfig } from '@/lib/utils';
 import { DocumentUpload } from './document-upload';

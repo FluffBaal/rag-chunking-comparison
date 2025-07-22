@@ -50,7 +50,7 @@ export function ConfigurationPanel({ config, onConfigChange, disabled = false, a
       setAvailableModels(data.models || []);
       
       // If current model is not in the available models, update to the first available one
-      const modelIds = data.models.map((m: any) => m.id);
+      const modelIds = data.models.map((m: { id: string; name: string }) => m.id);
       if (modelIds.length > 0 && !modelIds.includes(config.model)) {
         updateConfig('model', modelIds[0]);
       }
@@ -67,7 +67,7 @@ export function ConfigurationPanel({ config, onConfigChange, disabled = false, a
     }
   };
 
-  const updateConfig = (key: keyof ChunkingConfig, value: any) => {
+  const updateConfig = (key: keyof ChunkingConfig, value: string | number) => {
     onConfigChange({
       ...config,
       [key]: value
