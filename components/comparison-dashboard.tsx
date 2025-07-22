@@ -375,9 +375,9 @@ export function ComparisonDashboard() {
 
             <TabsContent value="metrics" className="space-y-4">
               <MetricsChart 
-                naive={results.naive.ragas}
-                semantic={results.semantic.ragas}
-                improvements={results.comparison.ragas_improvements}
+                naive={results.naive?.ragas || {}}
+                semantic={results.semantic?.ragas || {}}
+                improvements={results.comparison?.ragas_improvements || {}}
               />
             </TabsContent>
 

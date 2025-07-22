@@ -70,6 +70,14 @@ export interface RAGASMetrics {
   answer_correctness: number
 }
 
+export const defaultRAGASMetrics: RAGASMetrics = {
+  faithfulness: 0,
+  answer_relevancy: 0,
+  context_precision: 0,
+  context_recall: 0,
+  answer_correctness: 0
+}
+
 export interface ChunkingQualityMetrics {
   chunk_count: number
   avg_length: number

@@ -3,36 +3,69 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
-import { RAGASMetrics } from '@/lib/utils';
+import { RAGASMetrics, defaultRAGASMetrics } from '@/lib/utils';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface MetricsChartProps {
-  naive: RAGASMetrics;
-  semantic: RAGASMetrics;
-  improvements: Record<keyof RAGASMetrics, number>;
+  naive: RAGASMetrics | Partial<RAGASMetrics>;
+  semantic: RAGASMetrics | Partial<RAGASMetrics>;
+  improvements: Partial<Record<keyof RAGASMetrics, number>>;
+}
+
+// Helper to ensure all metrics properties exist
+function ensureCompleteMetrics(metrics: Partial<RAGASMetrics>): RAGASMetrics {
+  return {
+    ...defaultRAGASMetrics,
+    ...metrics
+  };
 }
 
 export function MetricsChart({ naive, semantic, improvements }: MetricsChartProps) {
+  // Ensure we have valid data
+  if (!naive || !semantic || !improvements) {
+    return (
+      <Card>
+        <CardContent className="p-6 text-center text-muted-foreground">
+          <p>No metrics data available. Run an evaluation to see results.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Ensure complete metrics objects
+  const completeNaive = ensureCompleteMetrics(naive);
+  const completeSemantic = ensureCompleteMetrics(semantic);
+  
+  // Initialize improvements with zeros for all metrics
+  const completeImprovements: Record<keyof RAGASMetrics, number> = {
+    faithfulness: 0,
+    answer_relevancy: 0,
+    context_precision: 0,
+    context_recall: 0,
+    answer_correctness: 0,
+    ...improvements
+  };
+
   // Filter out metrics where both values are very small (< 0.01)
-  const significantMetrics = Object.keys(naive).filter(metric => {
-    const naiveValue = naive[metric as keyof RAGASMetrics];
-    const semanticValue = semantic[metric as keyof RAGASMetrics];
-    return Math.max(naiveValue, semanticValue) > 0.01;
+  const significantMetrics = Object.keys(defaultRAGASMetrics).filter(metric => {
+    const naiveValue = completeNaive[metric as keyof RAGASMetrics];
+    const semanticValue = completeSemantic[metric as keyof RAGASMetrics];
+    return naiveValue != null && semanticValue != null && Math.max(naiveValue, semanticValue) > 0.01;
   });
 
   // Prepare data for bar chart
   const barData = significantMetrics.map(metric => ({
     metric: metric.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
-    naive: naive[metric as keyof RAGASMetrics],
-    semantic: semantic[metric as keyof RAGASMetrics],
-    improvement: improvements[metric as keyof RAGASMetrics]
+    naive: completeNaive[metric as keyof RAGASMetrics],
+    semantic: completeSemantic[metric as keyof RAGASMetrics],
+    improvement: completeImprovements[metric as keyof RAGASMetrics] || 0
   }));
 
   // Prepare data for radar chart
   const radarData = significantMetrics.map(metric => ({
     metric: metric.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
-    naive: naive[metric as keyof RAGASMetrics] * 100, // Convert to percentage for better visualization
-    semantic: semantic[metric as keyof RAGASMetrics] * 100
+    naive: completeNaive[metric as keyof RAGASMetrics] * 100, // Convert to percentage for better visualization
+    semantic: completeSemantic[metric as keyof RAGASMetrics] * 100
   }));
 
   const getImprovementIcon = (improvement: number) => {
