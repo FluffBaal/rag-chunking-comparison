@@ -4,11 +4,31 @@ import os
 import time
 import traceback
 import random
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Optional
 import math
 
 # Add the current directory to Python path for imports
 sys.path.append(os.path.dirname(__file__))
+
+# Import test generators
+try:
+    from test_generator import generate_domain_specific_test_set
+except ImportError:
+    print("Warning: Could not import test_generator module")
+    generate_domain_specific_test_set = None
+
+try:
+    from advanced_test_generator import generate_advanced_test_set
+except ImportError:
+    print("Warning: Could not import advanced_test_generator module")
+    generate_advanced_test_set = None
+
+# Import improved RAGAS metrics
+try:
+    from ragas_metrics import RAGASMetrics
+except ImportError:
+    print("Warning: Could not import ragas_metrics module")
+    RAGASMetrics = None
 
 try:
     import numpy as np
@@ -32,22 +52,41 @@ class RAGASEvaluator:
             # Initialize OpenAI client if API key is available
             if api_key:
                 self.openai_client = OpenAI(api_key=api_key)
+                print(f"Using provided OpenAI API key (length: {len(api_key)})")
             else:
                 api_key = os.getenv('OPENAI_API_KEY')
                 if api_key:
                     self.openai_client = OpenAI(api_key=api_key)
+                    print(f"Using environment OpenAI API key (length: {len(api_key)})")
                 else:
                     self.openai_client = None
                     print("Warning: OpenAI API key not found. Using simulated evaluations.")
+            
+            # Initialize improved RAGAS metrics if available
+            if RAGASMetrics:
+                self.ragas_metrics = RAGASMetrics()
+            else:
+                self.ragas_metrics = None
+                print("Warning: Using fallback RAGAS implementation")
+                
         except Exception as e:
             print(f"Error initializing evaluator: {e}")
             self.embedding_model = None
             self.openai_client = None
+            self.ragas_metrics = None
     
     def evaluate_strategy(self, chunks: List[str], test_dataset: List[Dict], strategy_name: str) -> Dict[str, Any]:
         """Evaluate a single chunking strategy"""
         
         start_time = time.time()
+        
+        # Log chunk statistics
+        chunk_lengths = [len(chunk) for chunk in chunks]
+        avg_length = sum(chunk_lengths) / len(chunk_lengths) if chunk_lengths else 0
+        print(f"\n{strategy_name.upper()} CHUNKING STATS:")
+        print(f"  - Number of chunks: {len(chunks)}")
+        print(f"  - Average chunk length: {avg_length:.0f} chars")
+        print(f"  - Min/Max length: {min(chunk_lengths)}/{max(chunk_lengths) if chunk_lengths else 0} chars")
         
         # Simulate RAG pipeline
         rag_results = self._simulate_rag_pipeline(chunks, test_dataset)
@@ -60,6 +99,19 @@ class RAGASEvaluator:
         
         evaluation_time = time.time() - start_time
         
+        # Get per-question metrics if available
+        per_question_metrics = None
+        if self.ragas_metrics and hasattr(self.ragas_metrics, 'compute_per_question_metrics'):
+            try:
+                per_question_metrics = self.ragas_metrics.compute_per_question_metrics(
+                    questions=rag_results['questions'],
+                    answers=rag_results['answers'],
+                    contexts=rag_results['contexts'],
+                    ground_truths=rag_results['ground_truths']
+                )
+            except Exception as e:
+                print(f"Error computing per-question metrics: {e}")
+        
         return {
             'ragas': ragas_scores,
             'chunking_quality': chunking_metrics,
@@ -69,7 +121,9 @@ class RAGASEvaluator:
             },
             'strategy': strategy_name,
             'timestamp': time.time(),
-            'chunks': chunks  # Include chunks in the results
+            'chunks': chunks,  # Include chunks in the results
+            'rag_details': rag_results,  # Include questions, answers, contexts for validation
+            'per_question_metrics': per_question_metrics  # Include individual question metrics
         }
     
     def _simulate_rag_pipeline(self, chunks: List[str], test_dataset: List[Dict]) -> Dict[str, List]:
@@ -149,32 +203,55 @@ class RAGASEvaluator:
         return self._simulate_answer_generation(question, contexts)
     
     def _simulate_answer_generation(self, question: str, contexts: List[str]) -> str:
-        """Simulate answer generation for demonstration"""
+        """Simulate answer generation using actual context"""
         
-        # Simple keyword-based answer simulation
+        if not contexts:
+            return "No relevant context found to answer this question."
+        
+        # Combine context text
+        context_text = " ".join(contexts)
         question_lower = question.lower()
-        context_text = " ".join(contexts).lower()
         
-        if "machine learning" in question_lower:
-            if "supervised" in context_text:
-                return "Machine learning is a subset of AI that includes supervised learning, where algorithms learn from labeled data to make predictions."
-            elif "unsupervised" in context_text:
-                return "Machine learning includes unsupervised learning, which finds patterns in unlabeled data through techniques like clustering."
-            else:
-                return "Machine learning is a field of artificial intelligence that enables computers to learn from data without explicit programming."
+        # Extract sentences from context that are most relevant to the question
+        context_sentences = [s.strip() for s in context_text.split('.') if s.strip()]
         
-        elif "supervised learning" in question_lower:
-            return "Supervised learning is a type of machine learning where algorithms learn from labeled training data to make predictions on new, unseen data."
+        # Find sentences that contain key words from the question
+        question_words = set([w.lower() for w in question.split() if len(w) > 3 and w.lower() not in {'what', 'which', 'where', 'when', 'how', 'does', 'this', 'that', 'the'}])
         
-        elif "unsupervised learning" in question_lower:
-            return "Unsupervised learning works with unlabeled data to discover hidden patterns and structures, commonly used for clustering and dimensionality reduction."
+        relevant_sentences = []
+        for sentence in context_sentences:
+            sentence_lower = sentence.lower()
+            # Count how many question keywords appear in this sentence
+            relevance_score = sum(1 for word in question_words if word in sentence_lower)
+            if relevance_score > 0:
+                relevant_sentences.append((relevance_score, sentence))
         
-        elif "deep learning" in question_lower:
-            return "Deep learning uses neural networks with multiple layers to automatically learn hierarchical representations, particularly effective for image and language tasks."
+        # Sort by relevance and take top sentences
+        relevant_sentences.sort(key=lambda x: x[0], reverse=True)
         
-        else:
-            # Generic answer based on context
-            return f"Based on the provided context, {question.lower().replace('what is', '').replace('?', '').strip()} is an important concept in machine learning and artificial intelligence."
+        if relevant_sentences:
+            # Combine the most relevant sentences into an answer
+            # Take up to 3 most relevant sentences
+            answer_sentences = [sent[1] for sent in relevant_sentences[:3]]
+            
+            # Try to make the answer more coherent
+            answer = ". ".join(answer_sentences)
+            
+            # Clean up the answer
+            answer = answer.replace("..", ".")
+            answer = answer.strip()
+            
+            # If answer is too short, add more context
+            if len(answer) < 50 and len(relevant_sentences) > 3:
+                answer += ". " + relevant_sentences[3][1]
+            
+            return answer
+        
+        # If no relevant sentences found, return the first sentence of context
+        if context_sentences:
+            return context_sentences[0]
+        
+        return "Unable to generate answer from the provided context."
     
     def _calculate_ragas_metrics(self, rag_results: Dict[str, List]) -> Dict[str, float]:
         """Calculate RAGAS-style metrics"""
@@ -184,7 +261,24 @@ class RAGASEvaluator:
         contexts = rag_results['contexts']
         ground_truths = rag_results['ground_truths']
         
-        # Calculate individual metrics
+        # Use improved RAGAS metrics if available
+        if self.ragas_metrics:
+            try:
+                metrics = self.ragas_metrics.compute_all_metrics(
+                    questions=questions,
+                    answers=answers,
+                    contexts=contexts,
+                    ground_truths=ground_truths
+                )
+                # Remove the aggregate score as we calculate it separately
+                if 'ragas_score' in metrics:
+                    del metrics['ragas_score']
+                return metrics
+            except Exception as e:
+                print(f"Error using improved RAGAS metrics: {e}")
+                # Fall back to original implementation
+        
+        # Original implementation as fallback
         faithfulness_scores = []
         relevancy_scores = []
         precision_scores = []
@@ -396,8 +490,52 @@ class RAGASEvaluator:
         # Rough estimate: 1 char ≈ 1 byte, plus overhead
         return (total_chars * 1.5) / (1024 * 1024)  # Convert to MB
 
-def create_test_dataset() -> List[Dict[str, str]]:
-    """Create comprehensive test questions and ground truth answers"""
+def create_test_dataset(document_content: Optional[str] = None, document_title: Optional[str] = None, 
+                       api_key: Optional[str] = None, custom_questions: Optional[List[Dict[str, str]]] = None) -> List[Dict[str, str]]:
+    """
+    Create test questions and ground truth answers
+    
+    Args:
+        document_content: Optional document text to generate domain-specific questions
+        document_title: Optional document title
+        api_key: Optional API key for advanced generation
+        custom_questions: Optional list of custom questions from user
+        
+    Returns:
+        List of test questions with ground truth answers
+    """
+    # Use custom questions if provided
+    if custom_questions and len(custom_questions) >= 4:
+        print(f"Using {len(custom_questions)} custom test questions")
+        return custom_questions
+    # Try advanced generator first if API key is available
+    if document_content and api_key and generate_advanced_test_set:
+        try:
+            print("Generating advanced test questions using LLM...")
+            advanced_test_set = generate_advanced_test_set(
+                document_content, document_title, num_questions=8, api_key=api_key
+            )
+            if advanced_test_set and len(advanced_test_set) >= 4:
+                print(f"Generated {len(advanced_test_set)} advanced test questions")
+                return advanced_test_set
+        except Exception as e:
+            print(f"Error generating advanced questions: {e}")
+            # Fall back to basic generator
+    
+    # If we have document content and the test generator is available, use it
+    if document_content and generate_domain_specific_test_set:
+        try:
+            print("Generating domain-specific test questions from document...")
+            domain_test_set = generate_domain_specific_test_set(document_content, document_title)
+            if domain_test_set and len(domain_test_set) >= 4:
+                print(f"Generated {len(domain_test_set)} domain-specific questions")
+                return domain_test_set
+        except Exception as e:
+            print(f"Error generating domain-specific questions: {e}")
+            # Fall back to default questions
+    
+    # Default ML-focused questions
+    print("Using default machine learning test questions")
     return [
         {
             'question': 'What is machine learning?',
@@ -451,8 +589,41 @@ async def handler(request, response):
         # Initialize evaluator with API key
         evaluator = RAGASEvaluator(api_key)
         
-        # Create test dataset
-        test_dataset = create_test_dataset()
+        # Extract document content if available
+        document_content = None
+        document_title = None
+        
+        # Check if document info was passed from chunking API
+        document_info = request_data.get('document_info')
+        if document_info:
+            document_content = document_info.get('content')
+            document_title = document_info.get('title')
+        
+        # Fallback: Try to reconstruct document from chunks (combine all unique chunk texts)
+        if not document_content and chunking_results and 'semantic' in chunking_results:
+            semantic_chunks_data = chunking_results['semantic']['chunks']
+            if semantic_chunks_data:
+                # Get unique chunk texts to avoid duplication
+                chunk_texts = []
+                seen_texts = set()
+                for chunk in semantic_chunks_data:
+                    text = chunk.get('text', '')
+                    if text and text not in seen_texts:
+                        chunk_texts.append(text)
+                        seen_texts.add(text)
+                
+                # Combine chunks to approximate the document
+                document_content = ' '.join(chunk_texts)
+                
+                # Try to get document info from metadata if available
+                metadata = chunking_results.get('metadata', {})
+                document_title = metadata.get('document_id', 'Document')
+        
+        # Get custom questions if provided
+        custom_questions = request_data.get('custom_questions')
+        
+        # Create test dataset - will use custom questions if provided, then advanced if API key available
+        test_dataset = create_test_dataset(document_content, document_title, api_key, custom_questions)
         
         # Evaluate both strategies
         naive_chunks = chunking_results['naive']['chunks']
@@ -470,7 +641,8 @@ async def handler(request, response):
             'results': {
                 'naive': naive_evaluation,
                 'semantic': semantic_evaluation,
-                'test_dataset_size': len(test_dataset)
+                'test_dataset_size': len(test_dataset),
+                'test_dataset': test_dataset  # Include test dataset for display
             },
             'config': config
         }

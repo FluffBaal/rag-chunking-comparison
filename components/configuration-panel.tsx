@@ -76,9 +76,9 @@ export function ConfigurationPanel({ config, onConfigChange, disabled = false, a
 
   const resetToDefaults = () => {
     onConfigChange({
-      similarity_threshold: 0.60,
+      similarity_threshold: 0.70,
       max_tokens: 400,
-      min_tokens: 50,
+      min_tokens: 75,
       chunk_size: 400,
       overlap: 50,
       model: 'gpt-3.5-turbo',
@@ -88,36 +88,36 @@ export function ConfigurationPanel({ config, onConfigChange, disabled = false, a
 
   const presets = [
     {
-      name: 'Conservative',
-      description: 'High similarity threshold, smaller chunks',
+      name: 'Focused',
+      description: 'Very high similarity, small precise chunks',
       config: {
-        similarity_threshold: 0.75,
-        max_tokens: 300,
+        similarity_threshold: 0.85,
+        max_tokens: 250,
         min_tokens: 100,
-        chunk_size: 300,
+        chunk_size: 250,
         overlap: 75
       }
     },
     {
       name: 'Balanced',
-      description: 'Default settings for most use cases',
+      description: 'Moderate settings for most documents',
       config: {
-        similarity_threshold: 0.60,
+        similarity_threshold: 0.70,
         max_tokens: 400,
-        min_tokens: 50,
+        min_tokens: 75,
         chunk_size: 400,
         overlap: 50
       }
     },
     {
-      name: 'Aggressive',
-      description: 'Lower similarity threshold, larger chunks',
+      name: 'Contextual',
+      description: 'Lower threshold for narrative documents',
       config: {
-        similarity_threshold: 0.45,
+        similarity_threshold: 0.55,
         max_tokens: 600,
-        min_tokens: 25,
+        min_tokens: 50,
         chunk_size: 600,
-        overlap: 25
+        overlap: 100
       }
     }
   ];
@@ -187,7 +187,7 @@ export function ConfigurationPanel({ config, onConfigChange, disabled = false, a
               className="w-full"
             />
             <p className="text-xs text-muted-foreground">
-              Higher values create more coherent but potentially smaller chunks
+              Higher values (0.7-0.9) create focused chunks better for Q&A. Lower values (0.5-0.7) preserve more context.
             </p>
           </div>
 

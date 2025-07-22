@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a RAG (Retrieval-Augmented Generation) chunking comparison application that evaluates different text chunking strategies using RAGAS metrics. It consists of a Next.js frontend with Python serverless backend functions deployed on Vercel.
+This is a RAG (Retrieval-Augmented Generation) chunking comparison application that evaluates different text chunking strategies using RAGAS metrics. It consists of a Next.js frontend with Python serverless backend functions that can be deployed on Vercel or run locally.
 
 ## Development Commands
 
@@ -37,10 +37,8 @@ For local development, you need to run both the Next.js frontend and Python API 
 # Make sure Python dependencies are installed
 uv sync
 
-# Run the Python development server
-uv run python dev-server.py
-# or
-uv run ./dev-server.py
+# Run the Python development server (Flask-based)
+uv run python run-dev-server.py 8001
 ```
 
 2. **Terminal 2 - Next.js Frontend:**
@@ -49,8 +47,8 @@ uv run ./dev-server.py
 npm run dev
 ```
 
-The Python server runs on port 8000 and handles the API endpoints locally.
-The Next.js server runs on port 4042 and proxies API requests to the Python server.
+The Python server runs on port 8001 and handles the API endpoints locally.
+The Next.js server runs on port 4042 and proxies API requests to the Python server in development mode.
 
 ### Python Backend (uv)
 ```bash
@@ -114,12 +112,30 @@ uv run python <script.py>
    - Provides recommendations and significance testing
    - Runtime: 30s timeout, 512MB memory
 
+4. **`/api/extract-pdf`** (Python)
+   - Extracts text from PDF files using PyPDF2
+   - Handles base64-encoded PDF content
+   - Returns extracted text with page count
+
+5. **`/api/models`** (TypeScript/Next.js)
+   - Fetches available OpenAI models when API key is provided
+   - Filters for text generation models only
+   - Returns sorted list with GPT-4 models prioritized
+
+6. **`/api/test-api-key`** (TypeScript/Next.js)
+   - Validates OpenAI API key
+   - Used by ApiKeyInput component
+
 ### Core Components Flow
 
 ```
 ComparisonDashboard (orchestrator)
 ├── ApiKeyInput (optional OpenAI configuration)
+│   └── Triggers model fetching via /api/models
+├── DocumentUpload (file upload with drag & drop)
+│   └── PDF files processed via /api/extract-pdf
 ├── ConfigurationPanel (chunking parameters)
+│   └── Dynamic model selection based on API key
 ├── Process Flow:
 │   1. POST /api/chunking → Get chunks
 │   2. POST /api/evaluation → Get RAGAS metrics
@@ -162,3 +178,53 @@ ComparisonDashboard (orchestrator)
 - Turbo mode enabled for faster development builds
 - Serverless functions optimized for cold starts
 - Client-side caching of expensive computations
+
+## Critical Implementation Notes
+
+### Python API Handler Structure
+All Python API handlers use async functions for Flask compatibility:
+```python
+async def handler(request, response):
+    """Async handler for the dev server"""
+    try:
+        request_data = await request.json()
+        # Process data...
+        return response.json(response_data)
+    except Exception as e:
+        return response.json(error_response, status=500)
+```
+
+**Important**: Do NOT use BaseHTTPRequestHandler class-based handlers as they conflict with the Flask dev server.
+
+### API Headers
+- Frontend sends API key via `x-api-key` header (not Authorization)
+- Python handlers access it via `request.headers.get('x-api-key')`
+
+### Data Flow Between APIs
+1. Chunking API returns: `{results: {naive: {...}, semantic: {...}}, ...}`
+2. Evaluation API expects: `{results: <chunking_results>, config: {...}}`
+3. Analysis API expects: `{results: <evaluation_results>}`
+
+### JSON Serialization
+When returning numpy/scipy values in Python APIs, always convert to Python types:
+```python
+'significant': bool(p_value < 0.05),  # Convert numpy bool
+'effect_size': float(cohens_d),        # Convert numpy float
+'has_scipy': bool(analyzer.has_scipy)  # Ensure boolean
+```
+
+### Document Upload Feature
+- Supports PDF, TXT, and MD files
+- PDF processing uses server-side PyPDF2 (not client-side pdf.js)
+- Max file size: 4MB (configurable)
+- PDF extraction endpoint: `/api/extract-pdf`
+
+### Development Server Notes
+- The `run-dev-server.py` creates Flask endpoints that proxy to the Python handlers
+- Uses MockRequest/MockResponse classes to adapt between Flask and async handlers
+- Auto-reloads on file changes in development
+
+### Common Issues and Solutions
+1. **"BaseRequestHandler.__init__() missing 1 required positional argument"**: Remove class-based handlers
+2. **"Object of type bool is not JSON serializable"**: Convert numpy booleans to Python bools
+3. **Evaluation expects List[str] but gets List[dict]**: Extract text from chunk objects: `[chunk['text'] for chunk in chunks]`

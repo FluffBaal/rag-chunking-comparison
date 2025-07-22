@@ -12,7 +12,9 @@ import { StatisticalSummary } from './statistical-summary';
 import { ConfigurationPanel } from './configuration-panel';
 import { ApiKeyInput } from './api-key-input';
 import { LoadingSpinner } from './loading-spinner';
-import { AlertCircle, CheckCircle, TrendingUp, TrendingDown, Zap } from 'lucide-react';
+import { TestValidation } from './test-validation';
+import { TestGenerationInfo } from './test-generation-info';
+import { AlertCircle, CheckCircle, TrendingUp, TrendingDown, Zap, Info } from 'lucide-react';
 import { ComparisonResults, ChunkingConfig } from '@/lib/utils';
 import { DocumentUpload } from './document-upload';
 
@@ -26,9 +28,9 @@ export function ComparisonDashboard() {
   const [documentContent, setDocumentContent] = useState<string>('');
   const [documentMetadata, setDocumentMetadata] = useState<{ title: string; type: string } | null>(null);
   const [config, setConfig] = useState<ChunkingConfig>({
-    similarity_threshold: 0.60,
+    similarity_threshold: 0.70,
     max_tokens: 400,
-    min_tokens: 50,
+    min_tokens: 75,
     chunk_size: 400,
     overlap: 50,
     model: 'gpt-3.5-turbo',
@@ -90,7 +92,8 @@ export function ComparisonDashboard() {
         },
         body: JSON.stringify({ 
           results: chunkingData.results,
-          config 
+          config,
+          document_info: chunkingData.document_info // Pass document info for domain-specific evaluation
         })
       });
 
@@ -136,7 +139,8 @@ export function ComparisonDashboard() {
       const finalResults: ComparisonResults = {
         naive: evaluationData.results.naive,
         semantic: evaluationData.results.semantic,
-        comparison: analysisData.analysis
+        comparison: analysisData.analysis,
+        test_dataset: evaluationData.results.test_dataset
       };
 
       setResults(finalResults);
@@ -189,6 +193,29 @@ export function ComparisonDashboard() {
 
       {/* Document Upload */}
       <DocumentUpload onDocumentChange={handleDocumentChange} />
+
+      {/* Test Generation Info */}
+      {documentContent && (
+        <Card className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+              <div className="space-y-1 text-sm">
+                <p className="font-medium text-blue-900 dark:text-blue-100">
+                  Test Question Quality
+                </p>
+                <div className="text-blue-700 dark:text-blue-300">
+                  {apiKey ? (
+                    <>Using <Badge variant="default" className="mx-1">LLM-Generated Questions</Badge> for sophisticated evaluation with multi-hop reasoning and context understanding.</>
+                  ) : (
+                    <>Using <Badge variant="secondary" className="mx-1">Rule-Based Questions</Badge> extracted from document patterns. Add an API key for better questions.</>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Configuration Panel */}
       <Card>
@@ -286,11 +313,12 @@ export function ComparisonDashboard() {
 
           {/* Detailed Results Tabs */}
           <Tabs defaultValue="overview" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="metrics">Metrics</TabsTrigger>
               <TabsTrigger value="chunks">Chunks</TabsTrigger>
               <TabsTrigger value="statistics">Statistics</TabsTrigger>
+              <TabsTrigger value="validation">Validation</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4">
@@ -301,16 +329,12 @@ export function ComparisonDashboard() {
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="flex justify-between">
-                      <span>Chunks:</span>
-                      <span className="font-mono">{results.naive.chunking_quality.chunk_count}</span>
+                      <span>Total Chunks:</span>
+                      <span className="font-mono text-lg font-semibold">{results.naive.chunking_quality.chunk_count}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Avg Length:</span>
                       <span className="font-mono">{results.naive.chunking_quality.avg_length.toFixed(0)} chars</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Coherence:</span>
-                      <span className="font-mono">{results.naive.chunking_quality.avg_coherence.toFixed(3)}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -321,16 +345,12 @@ export function ComparisonDashboard() {
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="flex justify-between">
-                      <span>Chunks:</span>
-                      <span className="font-mono">{results.semantic.chunking_quality.chunk_count}</span>
+                      <span>Total Chunks:</span>
+                      <span className="font-mono text-lg font-semibold">{results.semantic.chunking_quality.chunk_count}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Avg Length:</span>
                       <span className="font-mono">{results.semantic.chunking_quality.avg_length.toFixed(0)} chars</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Coherence:</span>
-                      <span className="font-mono">{results.semantic.chunking_quality.avg_coherence.toFixed(3)}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -355,57 +375,17 @@ export function ComparisonDashboard() {
             </TabsContent>
 
             <TabsContent value="statistics" className="space-y-4">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Statistical Significance</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {Object.entries(results.comparison.significance_tests).map(([metric, test]) => (
-                        <div key={metric} className="flex items-center justify-between">
-                          <span className="capitalize">{metric.replace('_', ' ')}</span>
-                          <div className="flex items-center gap-2">
-                            <Badge variant={test.significant ? 'success' : 'outline'}>
-                              p = {test.p_value.toFixed(3)}
-                            </Badge>
-                            <Badge variant="outline">
-                              d = {test.effect_size.toFixed(2)}
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+              <StatisticalSummary comparison={results.comparison} />
+            </TabsContent>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Recommendations</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm leading-relaxed">
-                      {results.comparison.summary.recommendation}
-                    </p>
-                    <div className="mt-4 space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Best Metric:</span>
-                        <span className="font-medium">
-                          {results.comparison.summary.best_improvement.metric} 
-                          (+{results.comparison.summary.best_improvement.improvement.toFixed(1)}%)
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Worst Metric:</span>
-                        <span className="font-medium">
-                          {results.comparison.summary.worst_improvement.metric} 
-                          ({results.comparison.summary.worst_improvement.improvement.toFixed(1)}%)
-                        </span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+            <TabsContent value="validation" className="space-y-4">
+              <TestValidation 
+                naiveDetails={results.naive.rag_details}
+                semanticDetails={results.semantic.rag_details}
+                testDataset={results.test_dataset}
+                naiveMetrics={results.naive.per_question_metrics}
+                semanticMetrics={results.semantic.per_question_metrics}
+              />
             </TabsContent>
           </Tabs>
         </>

@@ -13,8 +13,15 @@ interface MetricsChartProps {
 }
 
 export function MetricsChart({ naive, semantic, improvements }: MetricsChartProps) {
+  // Filter out metrics where both values are very small (< 0.01)
+  const significantMetrics = Object.keys(naive).filter(metric => {
+    const naiveValue = naive[metric as keyof RAGASMetrics];
+    const semanticValue = semantic[metric as keyof RAGASMetrics];
+    return Math.max(naiveValue, semanticValue) > 0.01;
+  });
+
   // Prepare data for bar chart
-  const barData = Object.keys(naive).map(metric => ({
+  const barData = significantMetrics.map(metric => ({
     metric: metric.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
     naive: naive[metric as keyof RAGASMetrics],
     semantic: semantic[metric as keyof RAGASMetrics],
@@ -22,7 +29,7 @@ export function MetricsChart({ naive, semantic, improvements }: MetricsChartProp
   }));
 
   // Prepare data for radar chart
-  const radarData = Object.keys(naive).map(metric => ({
+  const radarData = significantMetrics.map(metric => ({
     metric: metric.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
     naive: naive[metric as keyof RAGASMetrics] * 100, // Convert to percentage for better visualization
     semantic: semantic[metric as keyof RAGASMetrics] * 100
@@ -73,12 +80,19 @@ export function MetricsChart({ naive, semantic, improvements }: MetricsChartProp
     return null;
   };
 
+  const filteredCount = Object.keys(naive).length - significantMetrics.length;
+
   return (
     <div className="space-y-6">
       {/* Improvement Summary */}
       <Card>
         <CardHeader>
           <CardTitle>RAGAS Metrics Improvements</CardTitle>
+          {filteredCount > 0 && (
+            <p className="text-sm text-muted-foreground mt-1">
+              {filteredCount} metric{filteredCount > 1 ? 's' : ''} with near-zero values hidden
+            </p>
+          )}
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">

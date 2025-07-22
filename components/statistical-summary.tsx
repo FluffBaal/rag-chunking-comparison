@@ -159,34 +159,79 @@ export function StatisticalSummary({ comparison }: StatisticalSummaryProps) {
       <Card>
         <CardHeader>
           <CardTitle>Statistical Significance Tests</CardTitle>
+          <p className="text-sm text-muted-foreground mt-2">
+            These tests determine if the performance differences between chunking strategies are meaningful or just due to random chance.
+          </p>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {Object.entries(significance_tests).map(([metric, test]) => {
               const effectSize = getEffectSizeInterpretation(test.effect_size);
               
+              // Generate human-readable explanation based on the results
+              const getExplanation = () => {
+                if (test.significant) {
+                  if (test.effect_size > 0) {
+                    return `Semantic chunking performs measurably better for ${metric.replace('_', ' ')}. This improvement is statistically reliable.`;
+                  } else {
+                    return `Naive chunking actually performs better for ${metric.replace('_', ' ')}. This difference is statistically reliable.`;
+                  }
+                } else {
+                  return `The performance difference for ${metric.replace('_', ' ')} could be due to random variation. More data needed.`;
+                }
+              };
+              
               return (
-                <div key={metric} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex-1">
-                    <div className="font-medium capitalize">
-                      {metric.replace('_', ' ')}
+                <div key={metric} className="p-3 border rounded-lg space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="font-medium capitalize">
+                        {metric.replace('_', ' ')}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        p-value: {test.p_value.toFixed(4)} | Effect size: {test.effect_size.toFixed(3)}
+                      </div>
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      p-value: {test.p_value.toFixed(4)} | Effect size: {test.effect_size.toFixed(3)}
+                    
+                    <div className="flex items-center gap-2">
+                      <Badge variant={effectSize.color as any}>
+                        {effectSize.label} Effect
+                      </Badge>
+                      <Badge variant={test.significant ? 'success' : 'outline'}>
+                        {test.significant ? 'Significant' : 'Not Significant'}
+                      </Badge>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2">
-                    <Badge variant={effectSize.color as any}>
-                      {effectSize.label} Effect
-                    </Badge>
-                    <Badge variant={test.significant ? 'success' : 'outline'}>
-                      {test.significant ? 'Significant' : 'Not Significant'}
-                    </Badge>
+                  <div className="text-sm text-muted-foreground italic">
+                    {getExplanation()}
                   </div>
                 </div>
               );
             })}
+          </div>
+          
+          <div className="mt-6 p-4 bg-muted rounded-lg space-y-3">
+            <h4 className="font-medium text-sm">Understanding the Results:</h4>
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <div>
+                <strong>P-value:</strong> The probability of seeing this difference by chance. 
+                Values below 0.05 (5%) indicate the difference is likely real, not random.
+              </div>
+              <div>
+                <strong>Effect Size:</strong> How big the difference is in practical terms:
+                <ul className="ml-4 mt-1">
+                  <li>• Negligible (&lt; 0.2): Tiny difference, likely not noticeable</li>
+                  <li>• Small (0.2-0.5): Minor improvement</li>
+                  <li>• Medium (0.5-0.8): Moderate improvement, worth considering</li>
+                  <li>• Large (&gt; 0.8): Substantial improvement, highly recommended</li>
+                </ul>
+              </div>
+              <div>
+                <strong>Significant vs Not Significant:</strong> "Significant" means we're confident the difference is real. 
+                "Not Significant" means we can't rule out random chance.
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -379,7 +379,8 @@ async def handler(request, response):
             'document_info': {
                 'title': doc['title'],
                 'length': len(doc['content']),
-                'word_count': len(doc['content'].split())
+                'word_count': len(doc['content'].split()),
+                'content': doc['content']  # Include content for evaluation
             }
         }
         
