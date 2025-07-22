@@ -89,3 +89,4 @@ dmypy.json
 
 # Zone Identifier files (WSL)
 *:Zone.Identifier
+.env*.local
