@@ -6,7 +6,7 @@
     "dev": "next dev --turbo --port 4042",
     "build": "./scripts/vercel-build.sh",
     "build:next": "next build",
-    "prebuild:vercel": "echo 'Current commit:' && git rev-parse HEAD && echo 'Files in app/api:' && ls -la app/api/",
+    "prebuild:vercel": "echo 'Current commit:' && (git rev-parse HEAD 2>/dev/null || echo 'Git not available') && echo 'Files in app/api:' && ls -la app/api/",
     "build:vercel": "next build",
     "build:prod": "next build",
     "start": "next start --port 4042",
