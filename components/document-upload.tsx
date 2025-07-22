@@ -1,12 +1,20 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Upload, FileText, AlertCircle, File, X } from 'lucide-react';
 import { extractTextFromPDF, isValidPDFFile, formatFileSize } from '@/lib/pdf-utils';
+
+// Initialize PDF.js worker early
+if (typeof window !== 'undefined') {
+  import('pdfjs-dist').then((pdfjsLib) => {
+    const version = pdfjsLib.version || '3.11.174';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.min.js`;
+  }).catch(console.error);
+}
 
 interface DocumentUploadProps {
   onDocumentChange: (content: string, metadata?: { title: string; type: string }) => void;

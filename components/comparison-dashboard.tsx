@@ -136,8 +136,16 @@ export function ComparisonDashboard() {
 
       // Combine all results
       const finalResults: ComparisonResults = {
-        naive: evaluationData.naive,
-        semantic: evaluationData.semantic,
+        naive: {
+          ...evaluationData.naive,
+          chunks: chunkingData.results.naive.chunks,
+          chunking_quality: chunkingData.results.naive.quality_metrics
+        },
+        semantic: {
+          ...evaluationData.semantic,
+          chunks: chunkingData.results.semantic.chunks,
+          chunking_quality: chunkingData.results.semantic.quality_metrics
+        },
         comparison: analysisData,
         test_dataset: evaluationData.test_dataset
       };

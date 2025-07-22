@@ -48,7 +48,13 @@ export async function POST(request: NextRequest) {
         total_improvements: Object.keys(analysis.statistical_tests).length,
         significant_improvements: Object.values(analysis.statistical_tests).filter((t: any) => t.significant).length,
         average_improvement: calculateAverageImprovement(analysis),
-        recommendation: analysis.overall_recommendation
+        overall_improvement: calculateAverageImprovement(analysis),
+        significant_count: Object.values(analysis.statistical_tests).filter((t: any) => t.significant).length,
+        total_metrics: Object.keys(analysis.statistical_tests).length,
+        best_improvement: findBestImprovement(analysis),
+        worst_improvement: findWorstImprovement(analysis),
+        recommendation: analysis.overall_recommendation,
+        confidence_level: apiKey ? 'High' : 'Limited (No API Key)'
       },
       
       detailed_analysis: {
@@ -121,4 +127,26 @@ function formatMetricName(metric: string): string {
     .split('_')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
+}
+
+function findBestImprovement(analysis: any): { metric: string; improvement: number } | null {
+  const improvements = Object.entries(analysis.confidence_intervals)
+    .map(([metric, ci]: [string, any]) => ({
+      metric,
+      improvement: ci.mean_diff * 100
+    }))
+    .sort((a, b) => b.improvement - a.improvement);
+  
+  return improvements[0] || null;
+}
+
+function findWorstImprovement(analysis: any): { metric: string; improvement: number } | null {
+  const improvements = Object.entries(analysis.confidence_intervals)
+    .map(([metric, ci]: [string, any]) => ({
+      metric,
+      improvement: ci.mean_diff * 100
+    }))
+    .sort((a, b) => a.improvement - b.improvement);
+  
+  return improvements[0] || null;
 }
