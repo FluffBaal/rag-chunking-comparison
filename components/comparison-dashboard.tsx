@@ -157,7 +157,7 @@ export function ComparisonDashboard() {
     if (!results) return null;
     
     const improvement = results.comparison.summary.overall_improvement;
-    const significantCount = results.comparison.summary.significant_count;
+    const significantCount = results.comparison.summary.significant_count || 0;
     
     if (improvement > 10 && significantCount >= 3) {
       return { type: 'success', icon: CheckCircle, message: 'Semantic chunking significantly outperforms naive chunking' };

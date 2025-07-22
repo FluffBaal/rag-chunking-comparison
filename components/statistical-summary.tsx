@@ -10,20 +10,20 @@ interface StatisticalSummaryProps {
     summary: {
       overall_improvement: number;
       significant_metrics: string[];
-      significant_count: number;
-      total_metrics: number;
-      best_improvement: {
+      significant_count?: number;
+      total_metrics?: number;
+      best_improvement?: {
         metric: string;
         improvement: number;
       };
-      worst_improvement: {
+      worst_improvement?: {
         metric: string;
         improvement: number;
       };
       recommendation: string;
-      confidence_level: string;
+      confidence_level?: string;
     };
-    significance_tests: Record<string, {
+    significance_tests?: Record<string, {
       p_value: number;
       significant: boolean;
       effect_size: number;
@@ -83,14 +83,14 @@ export function StatisticalSummary({ comparison }: StatisticalSummaryProps) {
             
             <div className="text-center">
               <div className="text-2xl font-bold">
-                {summary.significant_count}/{summary.total_metrics}
+                {summary.significant_count || 0}/{summary.total_metrics || 0}
               </div>
               <div className="text-sm text-muted-foreground">Significant Metrics</div>
             </div>
             
             <div className="text-center">
-              <Badge variant={getConfidenceColor(summary.confidence_level) as any} className="text-sm">
-                {summary.confidence_level} Confidence
+              <Badge variant={getConfidenceColor(summary.confidence_level || 'N/A') as any} className="text-sm">
+                {summary.confidence_level || 'N/A'} Confidence
               </Badge>
             </div>
           </div>
@@ -98,10 +98,10 @@ export function StatisticalSummary({ comparison }: StatisticalSummaryProps) {
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Statistical Significance</span>
-              <span>{Math.round((summary.significant_count / summary.total_metrics) * 100)}%</span>
+              <span>{Math.round(((summary.significant_count || 0) / (summary.total_metrics || 1)) * 100)}%</span>
             </div>
             <Progress 
-              value={(summary.significant_count / summary.total_metrics) * 100} 
+              value={((summary.significant_count || 0) / (summary.total_metrics || 1)) * 100} 
               className="h-2"
             />
           </div>
@@ -120,10 +120,10 @@ export function StatisticalSummary({ comparison }: StatisticalSummaryProps) {
           <CardContent>
             <div className="space-y-2">
               <div className="text-lg font-semibold capitalize">
-                {summary.best_improvement.metric.replace('_', ' ')}
+                {summary.best_improvement?.metric.replace('_', ' ') || 'N/A'}
               </div>
               <div className="text-2xl font-bold text-green-600">
-                +{summary.best_improvement.improvement.toFixed(1)}%
+                +{summary.best_improvement?.improvement.toFixed(1) || 0}%
               </div>
               <div className="text-sm text-muted-foreground">
                 This metric showed the strongest improvement with semantic chunking
@@ -142,10 +142,10 @@ export function StatisticalSummary({ comparison }: StatisticalSummaryProps) {
           <CardContent>
             <div className="space-y-2">
               <div className="text-lg font-semibold capitalize">
-                {summary.worst_improvement.metric.replace('_', ' ')}
+                {summary.worst_improvement?.metric.replace('_', ' ') || 'N/A'}
               </div>
               <div className="text-2xl font-bold text-red-600">
-                {summary.worst_improvement.improvement.toFixed(1)}%
+                {summary.worst_improvement?.improvement.toFixed(1) || 0}%
               </div>
               <div className="text-sm text-muted-foreground">
                 This metric showed the least improvement or declined
@@ -165,7 +165,7 @@ export function StatisticalSummary({ comparison }: StatisticalSummaryProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {Object.entries(significance_tests).map(([metric, test]) => {
+            {significance_tests && Object.entries(significance_tests).map(([metric, test]) => {
               const effectSize = getEffectSizeInterpretation(test.effect_size);
               
               // Generate human-readable explanation based on the results
@@ -252,10 +252,10 @@ export function StatisticalSummary({ comparison }: StatisticalSummaryProps) {
           <div className="space-y-2">
             <h4 className="font-medium">Key Findings:</h4>
             <ul className="text-sm space-y-1 text-muted-foreground">
-              <li>• {summary.significant_count} out of {summary.total_metrics} metrics showed statistically significant improvements</li>
+              <li>• {summary.significant_count || 0} out of {summary.total_metrics || 0} metrics showed statistically significant improvements</li>
               <li>• Overall performance improvement of {summary.overall_improvement.toFixed(1)}%</li>
-              <li>• Confidence level: {summary.confidence_level}</li>
-              <li>• Best performing metric: {summary.best_improvement.metric.replace('_', ' ')} (+{summary.best_improvement.improvement.toFixed(1)}%)</li>
+              <li>• Confidence level: {summary.confidence_level || 'N/A'}</li>
+              {summary.best_improvement && <li>• Best performing metric: {summary.best_improvement.metric.replace('_', ' ')} (+{summary.best_improvement.improvement.toFixed(1)}%)</li>}
             </ul>
           </div>
         </CardContent>
