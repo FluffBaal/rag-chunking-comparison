@@ -15,11 +15,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'api'))
 from chunking import handler as chunking_handler
 from evaluation import handler as evaluation_handler  
 from analysis import handler as analysis_handler
-try:
-    from extract_pdf import handler as extract_pdf_handler
-except ImportError:
-    # Use underscore instead of hyphen
-    from extract_pdf import handler as extract_pdf_handler
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
@@ -91,21 +86,6 @@ def analysis():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/extract-pdf', methods=['POST', 'OPTIONS'])
-def extract_pdf():
-    if request.method == 'OPTIONS':
-        return '', 204
-    
-    try:
-        req = MockRequest(request.json, dict(request.headers))
-        res = MockResponse()
-        import asyncio
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(extract_pdf_handler(req, res))
-        return jsonify(res._json_data), res._status
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 @app.route('/')
 def index():

@@ -112,17 +112,12 @@ uv run python <script.py>
    - Provides recommendations and significance testing
    - Runtime: 30s timeout, 512MB memory
 
-4. **`/api/extract-pdf`** (Python)
-   - Extracts text from PDF files using PyPDF2
-   - Handles base64-encoded PDF content
-   - Returns extracted text with page count
-
-5. **`/api/models`** (TypeScript/Next.js)
+4. **`/api/models`** (TypeScript/Next.js)
    - Fetches available OpenAI models when API key is provided
    - Filters for text generation models only
    - Returns sorted list with GPT-4 models prioritized
 
-6. **`/api/test-api-key`** (TypeScript/Next.js)
+5. **`/api/test-api-key`** (TypeScript/Next.js)
    - Validates OpenAI API key
    - Used by ApiKeyInput component
 
@@ -133,7 +128,7 @@ ComparisonDashboard (orchestrator)
 ├── ApiKeyInput (optional OpenAI configuration)
 │   └── Triggers model fetching via /api/models
 ├── DocumentUpload (file upload with drag & drop)
-│   └── PDF files processed via /api/extract-pdf
+│   └── PDF files processed client-side using WebPDFLoader
 ├── ConfigurationPanel (chunking parameters)
 │   └── Dynamic model selection based on API key
 ├── Process Flow:
@@ -215,9 +210,9 @@ When returning numpy/scipy values in Python APIs, always convert to Python types
 
 ### Document Upload Feature
 - Supports PDF, TXT, and MD files
-- PDF processing uses server-side PyPDF2 (not client-side pdf.js)
+- PDF processing uses client-side WebPDFLoader from LangChain.js
 - Max file size: 4MB (configurable)
-- PDF extraction endpoint: `/api/extract-pdf`
+- No server-side dependencies for PDF extraction
 
 ### Development Server Notes
 - The `run-dev-server.py` creates Flask endpoints that proxy to the Python handlers
