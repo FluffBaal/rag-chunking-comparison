@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbo --port 4042",
-    "build": "next build --no-lint",
+    "build": "SKIP_ENV_VALIDATION=true next build",
+    "build:prod": "next build",
     "start": "next start --port 4042",
     "lint": "next lint",
     "type-check": "tsc --noEmit"

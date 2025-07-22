@@ -20,7 +20,7 @@ const nextConfig = {
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
   },
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, webpack }) => {
     // Prevent canvas from being bundled on client side
     if (!isServer) {
       config.resolve.fallback = {
@@ -37,6 +37,14 @@ const nextConfig = {
       asyncWebAssembly: true,
       layers: true,
     };
+
+    // Ignore build warnings
+    config.plugins.push(
+      new webpack.IgnorePlugin({
+        resourceRegExp: /^\.\/locale$/,
+        contextRegExp: /moment$/,
+      })
+    );
 
     return config;
   },
