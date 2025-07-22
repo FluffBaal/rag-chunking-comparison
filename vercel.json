@@ -11,6 +11,22 @@
     "api/analysis.py": {
       "maxDuration": 30,
       "memory": 512
+    },
+    "api/extract_pdf.py": {
+      "maxDuration": 30,
+      "memory": 512
+    },
+    "api/advanced_test_generator.py": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "api/ragas_metrics.py": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "api/test_generator.py": {
+      "maxDuration": 60,
+      "memory": 1024
     }
   },
   "env": {
