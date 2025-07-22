@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbo --port 4042",
-    "build": "next build",
+    "build": "next build --no-lint",
     "start": "next start --port 4042",
     "lint": "next lint",
     "type-check": "tsc --noEmit"
