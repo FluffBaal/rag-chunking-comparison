@@ -1,0 +1,24 @@
+# Ignore ESLint config during deployment
+.eslintrc*
+eslint.config.*
+
+# Ignore local environment files
+.env*.local
+
+# Ignore git files
+.git
+.gitignore
+
+# Ignore documentation
+*.md
+!README.md
+
+# Ignore test files
+**/*.test.*
+**/*.spec.*
+__tests__
+
+# Ignore development files
+.vscode
+.idea
+*.log
