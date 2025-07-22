@@ -18,16 +18,8 @@ async function configurePdfWorker() {
     pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.min.js`;
     workerConfigured = true;
   } catch (err) {
-    console.warn('Failed to configure PDF.js worker:', err);
-    // Fallback to inline worker if CDN fails
-    try {
-      const pdfjsLib = await import('pdfjs-dist');
-      const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.entry');
-      pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
-      workerConfigured = true;
-    } catch (fallbackErr) {
-      console.error('Failed to configure PDF.js worker with fallback:', fallbackErr);
-    }
+    console.error('Failed to configure PDF.js worker:', err);
+    // Worker will fall back to fake worker mode, but PDF parsing will still work
   }
 }
 
