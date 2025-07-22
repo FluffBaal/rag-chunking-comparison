@@ -8,9 +8,22 @@ export async function POST(request: NextRequest) {
     const { document, config } = body;
     const apiKey = request.headers.get('x-api-key') || undefined;
     
-    if (!document || typeof document !== 'string') {
+    // Handle both string and object formats for document
+    let documentText: string;
+    if (typeof document === 'string') {
+      documentText = document;
+    } else if (document && typeof document === 'object' && 'content' in document) {
+      documentText = document.content;
+    } else {
       return NextResponse.json(
-        { error: 'Document text is required' },
+        { error: 'Document text is required. Provide either a string or an object with content property.' },
+        { status: 400 }
+      );
+    }
+    
+    if (!documentText || documentText.trim().length === 0) {
+      return NextResponse.json(
+        { error: 'Document content cannot be empty' },
         { status: 400 }
       );
     }
@@ -18,7 +31,7 @@ export async function POST(request: NextRequest) {
     const startTime = Date.now();
     
     // Perform naive chunking
-    const naiveChunks = naiveChunking(document, {
+    const naiveChunks = naiveChunking(documentText, {
       chunk_size: config?.chunk_size || 400,
       overlap: config?.overlap || 50,
       model: config?.model || 'gpt-3.5-turbo'
@@ -27,7 +40,7 @@ export async function POST(request: NextRequest) {
     const naiveMetrics = calculateNaiveMetrics(naiveChunks);
     
     // Perform semantic chunking
-    const semanticChunks = await semanticChunking(document, {
+    const semanticChunks = await semanticChunking(documentText, {
       similarity_threshold: config?.similarity_threshold || 0.7,
       max_tokens: config?.max_tokens || 400,
       min_tokens: config?.min_tokens || 75,
@@ -44,6 +57,7 @@ export async function POST(request: NextRequest) {
       : 0;
     
     const response = {
+      success: true,
       results: {
         naive: {
           strategy: 'naive',
@@ -73,7 +87,7 @@ export async function POST(request: NextRequest) {
       },
       metadata: {
         processing_time: (Date.now() - startTime) / 1000,
-        document_length: document.length,
+        document_length: documentText.length,
         api_version: '2.0.0',
         mode: apiKey ? 'full' : 'limited'
       }

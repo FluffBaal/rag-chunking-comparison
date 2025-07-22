@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
     
     // Format response to match expected structure
     const response = {
+      success: true,
       statistical_tests: Object.entries(analysis.statistical_tests).reduce((acc, [metric, test]) => {
         acc[metric] = {
           statistic: test.statistic,

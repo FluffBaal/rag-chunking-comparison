@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
     const improvements = calculateImprovements(naiveEval.metrics, semanticEval.metrics);
     
     const response = {
+      success: true,
       naive: {
         ragas: naiveEval.metrics,
         rag_details: {

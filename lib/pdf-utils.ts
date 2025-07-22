@@ -1,4 +1,17 @@
+'use client';
+
 import { WebPDFLoader } from "@langchain/community/document_loaders/web/pdf";
+
+// Configure PDF.js worker to avoid "fake worker" warning
+if (typeof window !== 'undefined') {
+  // Dynamic import to avoid SSR issues
+  import('pdfjs-dist').then((pdfjsLib) => {
+    // Use CDN for the worker to avoid build issues
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+  }).catch(err => {
+    console.warn('Failed to configure PDF.js worker:', err);
+  });
+}
 
 export async function extractTextFromPDF(file: File): Promise<string> {
   try {
@@ -26,10 +39,21 @@ export async function extractTextFromPDF(file: File): Promise<string> {
     return text.trim();
   } catch (error) {
     console.error('PDF extraction error:', error);
-    if (error instanceof Error && error.message.includes('No text content')) {
-      throw error;
+    
+    // Provide more specific error messages
+    if (error instanceof Error) {
+      if (error.message.includes('No text content')) {
+        throw error;
+      }
+      if (error.message.includes('decrypt')) {
+        throw new Error('This PDF is encrypted and cannot be processed.');
+      }
+      if (error.message.includes('Invalid PDF')) {
+        throw new Error('The file appears to be corrupted or is not a valid PDF.');
+      }
     }
-    throw new Error('Failed to extract text from PDF. Please ensure the PDF contains readable text.');
+    
+    throw new Error('Failed to extract text from PDF. Please ensure the PDF contains readable text and is not corrupted.');
   }
 }
 
