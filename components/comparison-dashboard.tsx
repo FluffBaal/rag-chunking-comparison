@@ -117,7 +117,7 @@ export function ComparisonDashboard() {
           ...(apiKey ? { 'x-api-key': apiKey } : {})
         },
         body: JSON.stringify({ 
-          results: evaluationData.results
+          results: evaluationData
         })
       });
 
@@ -136,10 +136,10 @@ export function ComparisonDashboard() {
 
       // Combine all results
       const finalResults: ComparisonResults = {
-        naive: evaluationData.results.naive,
-        semantic: evaluationData.results.semantic,
-        comparison: analysisData.analysis,
-        test_dataset: evaluationData.results.test_dataset
+        naive: evaluationData.naive,
+        semantic: evaluationData.semantic,
+        comparison: analysisData,
+        test_dataset: evaluationData.test_dataset
       };
 
       setResults(finalResults);

@@ -2,19 +2,40 @@
 
 import { WebPDFLoader } from "@langchain/community/document_loaders/web/pdf";
 
+// Store worker configuration state
+let workerConfigured = false;
+
 // Configure PDF.js worker to avoid "fake worker" warning
-if (typeof window !== 'undefined') {
-  // Dynamic import to avoid SSR issues
-  import('pdfjs-dist').then((pdfjsLib) => {
-    // Use CDN for the worker to avoid build issues
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
-  }).catch(err => {
+async function configurePdfWorker() {
+  if (workerConfigured || typeof window === 'undefined') {
+    return;
+  }
+  
+  try {
+    const pdfjsLib = await import('pdfjs-dist');
+    // Use specific version to ensure compatibility
+    const version = pdfjsLib.version || '3.11.174';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${version}/pdf.worker.min.js`;
+    workerConfigured = true;
+  } catch (err) {
     console.warn('Failed to configure PDF.js worker:', err);
-  });
+    // Fallback to inline worker if CDN fails
+    try {
+      const pdfjsLib = await import('pdfjs-dist');
+      const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.entry');
+      pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+      workerConfigured = true;
+    } catch (fallbackErr) {
+      console.error('Failed to configure PDF.js worker with fallback:', fallbackErr);
+    }
+  }
 }
 
 export async function extractTextFromPDF(file: File): Promise<string> {
   try {
+    // Ensure worker is configured before processing PDF
+    await configurePdfWorker();
+    
     // Create a blob from the file
     const blob = new Blob([await file.arrayBuffer()], { type: file.type });
     
