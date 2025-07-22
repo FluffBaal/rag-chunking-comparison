@@ -83,9 +83,13 @@ export async function POST(request: NextRequest) {
     
   } catch (error) {
     console.error('Chunking error:', error);
-    return NextResponse.json(
-      { error: 'Failed to process document. ' + (error instanceof Error ? error.message : 'Unknown error') },
-      { status: 500 }
-    );
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorDetails = {
+      error: `Failed to process document: ${errorMessage}`,
+      details: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString()
+    };
+    
+    return NextResponse.json(errorDetails, { status: 500 });
   }
 }
