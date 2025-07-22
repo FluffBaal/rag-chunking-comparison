@@ -125,8 +125,8 @@ export function TestValidation({ naiveDetails, semanticDetails, testDataset, nai
                         <Badge variant="outline">Naive Chunking</Badge>
                         {naiveMetrics && naiveMetrics[index] && (
                           <div className="flex items-center gap-2">
-                            <Badge variant={naiveMetrics[index].answer_correctness > 0.7 ? 'success' : naiveMetrics[index].answer_correctness > 0.4 ? 'default' : 'destructive'}>
-                              {(naiveMetrics[index].answer_correctness * 100).toFixed(0)}% Correct
+                            <Badge variant={naiveMetrics[index].answer_correctness != null ? (naiveMetrics[index].answer_correctness > 0.7 ? 'success' : naiveMetrics[index].answer_correctness > 0.4 ? 'default' : 'destructive') : 'outline'}>
+                              {naiveMetrics[index].answer_correctness != null ? `${(naiveMetrics[index].answer_correctness * 100).toFixed(0)}% Correct` : 'N/A'}
                             </Badge>
                           </div>
                         )}
@@ -136,11 +136,11 @@ export function TestValidation({ naiveDetails, semanticDetails, testDataset, nai
                         <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Faithfulness:</span>
-                            <span className="font-mono">{(naiveMetrics[index].faithfulness * 100).toFixed(0)}%</span>
+                            <span className="font-mono">{naiveMetrics[index].faithfulness != null ? `${(naiveMetrics[index].faithfulness * 100).toFixed(0)}%` : 'N/A'}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Relevancy:</span>
-                            <span className="font-mono">{(naiveMetrics[index].answer_relevancy * 100).toFixed(0)}%</span>
+                            <span className="font-mono">{naiveMetrics[index].answer_relevancy != null ? `${(naiveMetrics[index].answer_relevancy * 100).toFixed(0)}%` : 'N/A'}</span>
                           </div>
                         </div>
                       )}
@@ -152,8 +152,8 @@ export function TestValidation({ naiveDetails, semanticDetails, testDataset, nai
                         <Badge variant="default">Semantic Chunking</Badge>
                         {semanticMetrics && semanticMetrics[index] && (
                           <div className="flex items-center gap-2">
-                            <Badge variant={semanticMetrics[index].answer_correctness > 0.7 ? 'success' : semanticMetrics[index].answer_correctness > 0.4 ? 'default' : 'destructive'}>
-                              {(semanticMetrics[index].answer_correctness * 100).toFixed(0)}% Correct
+                            <Badge variant={semanticMetrics[index].answer_correctness != null ? (semanticMetrics[index].answer_correctness > 0.7 ? 'success' : semanticMetrics[index].answer_correctness > 0.4 ? 'default' : 'destructive') : 'outline'}>
+                              {semanticMetrics[index].answer_correctness != null ? `${(semanticMetrics[index].answer_correctness * 100).toFixed(0)}% Correct` : 'N/A'}
                             </Badge>
                           </div>
                         )}
@@ -163,11 +163,11 @@ export function TestValidation({ naiveDetails, semanticDetails, testDataset, nai
                         <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Faithfulness:</span>
-                            <span className="font-mono">{(semanticMetrics[index].faithfulness * 100).toFixed(0)}%</span>
+                            <span className="font-mono">{semanticMetrics[index].faithfulness != null ? `${(semanticMetrics[index].faithfulness * 100).toFixed(0)}%` : 'N/A'}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Relevancy:</span>
-                            <span className="font-mono">{(semanticMetrics[index].answer_relevancy * 100).toFixed(0)}%</span>
+                            <span className="font-mono">{semanticMetrics[index].answer_relevancy != null ? `${(semanticMetrics[index].answer_relevancy * 100).toFixed(0)}%` : 'N/A'}</span>
                           </div>
                         </div>
                       )}
@@ -231,16 +231,16 @@ export function TestValidation({ naiveDetails, semanticDetails, testDataset, nai
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold">
-                {naiveMetrics ? 
-                  (naiveMetrics.reduce((sum, m) => sum + m.answer_correctness, 0) / naiveMetrics.length * 100).toFixed(0) + '%' 
+                {naiveMetrics && naiveMetrics.length > 0 ? 
+                  (naiveMetrics.reduce((sum, m) => sum + (m?.answer_correctness || 0), 0) / naiveMetrics.length * 100).toFixed(0) + '%' 
                   : '-'}
               </div>
               <div className="text-sm text-muted-foreground">Naive Avg Score</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold">
-                {semanticMetrics ? 
-                  (semanticMetrics.reduce((sum, m) => sum + m.answer_correctness, 0) / semanticMetrics.length * 100).toFixed(0) + '%' 
+                {semanticMetrics && semanticMetrics.length > 0 ? 
+                  (semanticMetrics.reduce((sum, m) => sum + (m?.answer_correctness || 0), 0) / semanticMetrics.length * 100).toFixed(0) + '%' 
                   : '-'}
               </div>
               <div className="text-sm text-muted-foreground">Semantic Avg Score</div>

@@ -57,7 +57,8 @@ export async function POST(request: NextRequest) {
           retrieved_contexts: naiveEval.retrievals.map(chunks => chunks.map(c => c.text)),
           generated_answers: naiveEval.answers,
           ground_truths: questions.map(q => q.expected_answer)
-        }
+        },
+        per_question_metrics: naiveEval.perQuestionMetrics
       },
       semantic: {
         ragas: semanticEval.metrics,
@@ -65,7 +66,8 @@ export async function POST(request: NextRequest) {
           retrieved_contexts: semanticEval.retrievals.map(chunks => chunks.map(c => c.text)),
           generated_answers: semanticEval.answers,
           ground_truths: questions.map(q => q.expected_answer)
-        }
+        },
+        per_question_metrics: semanticEval.perQuestionMetrics
       },
       comparison: {
         ragas_improvements: improvements,
@@ -129,7 +131,7 @@ async function evaluateStrategy(
   }
   
   // Calculate RAGAS metrics
-  const metrics = await calculateRAGASMetrics(
+  const metricsResult = await calculateRAGASMetrics(
     questions,
     retrievals,
     answers,
@@ -137,7 +139,8 @@ async function evaluateStrategy(
   );
   
   return {
-    metrics,
+    metrics: metricsResult.averages,
+    perQuestionMetrics: metricsResult.perQuestion,
     retrievals,
     answers
   };

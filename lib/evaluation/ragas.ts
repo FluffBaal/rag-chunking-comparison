@@ -164,7 +164,7 @@ export async function calculateRAGASMetrics(
   retrievedChunks: Array<Array<{ text: string }>>,
   generatedAnswers: string[],
   config: EvaluationConfig
-): Promise<RAGASMetrics> {
+): Promise<{ averages: RAGASMetrics; perQuestion: RAGASMetrics[] }> {
   if (!config.apiKey) {
     // Return simulated metrics without API
     return calculateSimulatedMetrics(questions, retrievedChunks, generatedAnswers);
@@ -181,6 +181,8 @@ export async function calculateRAGASMetrics(
   let totalRecall = 0;
   let totalCorrectness = 0;
   
+  const perQuestionMetrics = [];
+  
   for (let i = 0; i < questions.length; i++) {
     const question = questions[i];
     const retrieved = retrievedChunks[i];
@@ -193,6 +195,14 @@ export async function calculateRAGASMetrics(
     const recall = evaluateRecall(question.context, retrieved);
     const correctness = await evaluateCorrectness(openai, question.expected_answer, answer, config.model);
     
+    perQuestionMetrics.push({
+      faithfulness,
+      answer_relevancy: relevancy,
+      context_precision: precision,
+      context_recall: recall,
+      answer_correctness: correctness
+    });
+    
     totalFaithfulness += faithfulness;
     totalRelevancy += relevancy;
     totalPrecision += precision;
@@ -202,11 +212,14 @@ export async function calculateRAGASMetrics(
   
   const n = questions.length;
   return {
-    faithfulness: totalFaithfulness / n,
-    answer_relevancy: totalRelevancy / n,
-    context_precision: totalPrecision / n,
-    context_recall: totalRecall / n,
-    answer_correctness: totalCorrectness / n
+    averages: {
+      faithfulness: totalFaithfulness / n,
+      answer_relevancy: totalRelevancy / n,
+      context_precision: totalPrecision / n,
+      context_recall: totalRecall / n,
+      answer_correctness: totalCorrectness / n
+    },
+    perQuestion: perQuestionMetrics
   };
 }
 
@@ -283,13 +296,22 @@ function calculateSimulatedMetrics(
   questions: TestQuestion[],
   retrievedChunks: Array<Array<{ text: string }>>,
   generatedAnswers: string[]
-): RAGASMetrics {
+): { averages: RAGASMetrics; perQuestion: RAGASMetrics[] } {
   let totalPrecision = 0;
   let totalRecall = 0;
+  const perQuestionMetrics = [];
   
   for (let i = 0; i < questions.length; i++) {
     const precision = evaluatePrecision(questions[i].context, retrievedChunks[i]);
     const recall = evaluateRecall(questions[i].context, retrievedChunks[i]);
+    
+    perQuestionMetrics.push({
+      faithfulness: 0.75 + Math.random() * 0.15,
+      answer_relevancy: 0.70 + Math.random() * 0.20,
+      context_precision: precision,
+      context_recall: recall,
+      answer_correctness: 0.65 + Math.random() * 0.25
+    });
     
     totalPrecision += precision;
     totalRecall += recall;
@@ -300,11 +322,14 @@ function calculateSimulatedMetrics(
   const avgRecall = totalRecall / n;
   
   return {
-    faithfulness: 0.75 + Math.random() * 0.15, // 0.75-0.90
-    answer_relevancy: 0.70 + Math.random() * 0.20, // 0.70-0.90
-    context_precision: avgPrecision,
-    context_recall: avgRecall,
-    answer_correctness: 0.65 + Math.random() * 0.25 // 0.65-0.90
+    averages: {
+      faithfulness: 0.75 + Math.random() * 0.15, // 0.75-0.90
+      answer_relevancy: 0.70 + Math.random() * 0.20, // 0.70-0.90
+      context_precision: avgPrecision,
+      context_recall: avgRecall,
+      answer_correctness: 0.65 + Math.random() * 0.25 // 0.65-0.90
+    },
+    perQuestion: perQuestionMetrics
   };
 }
 
