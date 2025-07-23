@@ -1,9 +1,11 @@
 import OpenAI from 'openai';
+import { tfidfRetrieveChunks, hybridRetrieveChunks } from './tfidf-retrieval';
 
 export interface EvaluationConfig {
   model?: string;
   num_questions?: number;
   apiKey?: string;
+  retrievalMethod?: 'naive' | 'tfidf' | 'hybrid';
 }
 
 export interface RAGASMetrics {
@@ -82,7 +84,25 @@ Format your response as JSON:
   }
 }
 
-// Simple retrieval using keyword matching
+// Enhanced retrieval function with multiple methods
+export function enhancedRetrieveChunks(
+  query: string,
+  chunks: Array<{ text: string }>,
+  topK: number = 3,
+  method: 'naive' | 'tfidf' | 'hybrid' = 'hybrid'
+): Array<{ text: string }> {
+  switch (method) {
+    case 'tfidf':
+      return tfidfRetrieveChunks(query, chunks, topK);
+    case 'hybrid':
+      return hybridRetrieveChunks(query, chunks, topK);
+    case 'naive':
+    default:
+      return retrieveChunks(query, chunks, topK);
+  }
+}
+
+// Simple retrieval using keyword matching (original implementation)
 export function retrieveChunks(
   query: string,
   chunks: Array<{ text: string }>,

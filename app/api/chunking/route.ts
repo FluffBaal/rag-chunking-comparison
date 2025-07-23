@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { naiveChunking, calculateNaiveMetrics } from '@/lib/chunking/naive';
 import { semanticChunking, calculateSemanticMetrics } from '@/lib/chunking/semantic';
+import { chunkCache } from '@/lib/cache/browser-cache';
 
 export async function POST(request: NextRequest) {
   try {

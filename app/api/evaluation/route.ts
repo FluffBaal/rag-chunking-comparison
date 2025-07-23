@@ -46,6 +46,14 @@ export async function POST(request: NextRequest) {
       evaluationConfig
     );
     
+    // Ensure retrievals exist
+    if (!naiveEval.retrievals || !Array.isArray(naiveEval.retrievals)) {
+      naiveEval.retrievals = [];
+    }
+    if (!semanticEval.retrievals || !Array.isArray(semanticEval.retrievals)) {
+      semanticEval.retrievals = [];
+    }
+    
     // Calculate improvements
     const improvements = calculateImprovements(naiveEval.metrics, semanticEval.metrics);
     
@@ -54,20 +62,26 @@ export async function POST(request: NextRequest) {
       naive: {
         ragas: naiveEval.metrics,
         rag_details: {
-          retrieved_contexts: naiveEval.retrievals.map(chunks => chunks.map(c => c.text)),
-          generated_answers: naiveEval.answers,
+          questions: questions.map(q => q.question),
+          answers: naiveEval.answers || [],
+          contexts: naiveEval.retrievals ? naiveEval.retrievals.map(chunks => 
+            Array.isArray(chunks) ? chunks.map(c => c?.text || '') : []
+          ) : [],
           ground_truths: questions.map(q => q.expected_answer)
         },
-        per_question_metrics: naiveEval.perQuestionMetrics
+        per_question_metrics: naiveEval.perQuestionMetrics || []
       },
       semantic: {
         ragas: semanticEval.metrics,
         rag_details: {
-          retrieved_contexts: semanticEval.retrievals.map(chunks => chunks.map(c => c.text)),
-          generated_answers: semanticEval.answers,
+          questions: questions.map(q => q.question),
+          answers: semanticEval.answers || [],
+          contexts: semanticEval.retrievals ? semanticEval.retrievals.map(chunks => 
+            Array.isArray(chunks) ? chunks.map(c => c?.text || '') : []
+          ) : [],
           ground_truths: questions.map(q => q.expected_answer)
         },
-        per_question_metrics: semanticEval.perQuestionMetrics
+        per_question_metrics: semanticEval.perQuestionMetrics || []
       },
       comparison: {
         ragas_improvements: improvements,
@@ -120,6 +134,16 @@ async function evaluateStrategy(
   const retrievals: Array<Array<{ text: string }>> = [];
   const answers: string[] = [];
   
+  // Validate chunks input
+  if (!chunks || !Array.isArray(chunks)) {
+    chunks = [];
+  }
+  
+  // Validate questions input
+  if (!questions || !Array.isArray(questions)) {
+    questions = [];
+  }
+  
   for (const question of questions) {
     // Retrieve relevant chunks
     const retrieved = retrieveChunks(question.question, chunks, 3);
@@ -139,10 +163,16 @@ async function evaluateStrategy(
   );
   
   return {
-    metrics: metricsResult.averages,
-    perQuestionMetrics: metricsResult.perQuestion,
-    retrievals,
-    answers
+    metrics: metricsResult.averages || {
+      faithfulness: 0,
+      answer_relevancy: 0,
+      context_precision: 0,
+      context_recall: 0,
+      answer_correctness: 0
+    },
+    perQuestionMetrics: metricsResult.perQuestion || [],
+    retrievals: retrievals || [],
+    answers: answers || []
   };
 }
 

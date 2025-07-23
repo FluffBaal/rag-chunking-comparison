@@ -13,9 +13,10 @@ import { ConfigurationPanel } from './configuration-panel';
 import { ApiKeyInput } from './api-key-input';
 import { LoadingSpinner } from './loading-spinner';
 import { TestValidation } from './test-validation';
-import { AlertCircle, CheckCircle, TrendingUp, TrendingDown, Zap, Info } from 'lucide-react';
+import { AlertCircle, CheckCircle, TrendingUp, TrendingDown, Zap, Info, Database } from 'lucide-react';
 import { ComparisonResults, ChunkingConfig } from '@/lib/utils';
 import { DocumentUpload } from './document-upload';
+import { useCachedChunking } from '@/lib/hooks/use-cached-chunking';
 
 export function ComparisonDashboard() {
   const [results, setResults] = useState<ComparisonResults | null>(null);
@@ -35,6 +36,21 @@ export function ComparisonDashboard() {
     model: 'gpt-3.5-turbo',
     provider: 'openai'
   });
+  
+  // Cache integration
+  const { 
+    performChunking, 
+    clearCache, 
+    getCacheInfo, 
+    cacheStats 
+  } = useCachedChunking({
+    onCacheHit: () => {
+      setCurrentStep('Using cached results...');
+    },
+    onCacheMiss: () => {
+      setCurrentStep('Processing document...');
+    }
+  });
 
   const runComparison = async () => {
     // Validate that we have a document
@@ -53,27 +69,12 @@ export function ComparisonDashboard() {
       setCurrentStep('Processing document with both chunking strategies...');
       setProgress(10);
       
-      const chunkingResponse = await fetch('/api/chunking', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          ...(apiKey ? { 'x-api-key': apiKey } : {})
-        },
-        body: JSON.stringify({ 
-          config,
-          document: documentContent ? {
-            content: documentContent,
-            title: documentMetadata?.title || 'Uploaded Document',
-            type: documentMetadata?.type || 'text/plain'
-          } : null
-        })
-      });
-
-      if (!chunkingResponse.ok) {
-        throw new Error(`Chunking failed: ${chunkingResponse.statusText}`);
-      }
-
-      const chunkingData = await chunkingResponse.json();
+      // Use cached chunking
+      const chunkingData = await performChunking(
+        documentContent || 'default document',
+        config,
+        apiKey || undefined
+      );
       
       if (!chunkingData.success) {
         throw new Error(chunkingData.error || 'Chunking failed');
@@ -240,15 +241,31 @@ export function ComparisonDashboard() {
             disabled={isRunning}
             apiKey={apiKey}
           />
-          <div className="mt-4">
-            <Button 
-              onClick={runComparison} 
-              disabled={isRunning || (!documentContent && !apiKey)}
-              className="w-full sm:w-auto"
-              size="lg"
-            >
-              {isRunning ? 'Running Analysis...' : 'Run Chunking Comparison'}
-            </Button>
+          <div className="mt-4 space-y-3">
+            <div className="flex flex-wrap gap-2">
+              <Button 
+                onClick={runComparison} 
+                disabled={isRunning || (!documentContent && !apiKey)}
+                className="flex-1 sm:flex-none"
+                size="lg"
+              >
+                {isRunning ? 'Running Analysis...' : 'Run Chunking Comparison'}
+              </Button>
+              {cacheStats.hits > 0 && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Database className="h-4 w-4" />
+                  <span>Cache: {cacheStats.hits} hits, {cacheStats.misses} misses</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearCache}
+                    className="h-7 px-2"
+                  >
+                    Clear
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>

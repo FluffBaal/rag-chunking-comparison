@@ -1,5 +1,6 @@
 import { Chunk } from './naive';
 import OpenAI from 'openai';
+import { encode } from 'gpt-tokenizer';
 
 export interface SemanticConfig {
   similarity_threshold?: number;
@@ -75,7 +76,7 @@ export async function semanticChunking(
     
     for (let i = 0; i < sentences.length; i++) {
       const sentence = sentences[i];
-      const sentenceTokens = Math.ceil(sentence.length / 4); // Approximate
+      const sentenceTokens = encode(sentence).length; // Accurate token count
       const embedding = embeddings[i];
       
       // Check if we should start a new chunk
@@ -160,7 +161,7 @@ function fallbackSemanticChunking(
   let currentTokens = 0;
   
   for (const sentence of sentences) {
-    const sentenceTokens = Math.ceil(sentence.length / 4); // Approximate
+    const sentenceTokens = encode(sentence).length; // Accurate token count
     
     if (currentTokens + sentenceTokens > maxTokens && currentTokens >= minTokens) {
       // Create new chunk

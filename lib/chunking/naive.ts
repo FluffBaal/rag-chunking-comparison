@@ -1,3 +1,5 @@
+import { encode } from 'gpt-tokenizer';
+
 export interface Chunk {
   text: string;
   metadata: {
@@ -12,6 +14,16 @@ export interface ChunkingConfig {
   chunk_size?: number;
   overlap?: number;
   model?: string;
+}
+
+// Accurate token counting using gpt-tokenizer
+function getTokenCount(text: string): number {
+  try {
+    return encode(text).length;
+  } catch (error) {
+    // Fallback to character-based approximation if encoding fails
+    return Math.ceil(text.length / 4);
+  }
 }
 
 // Simple tokenizer fallback
@@ -39,13 +51,14 @@ export function naiveChunking(text: string, config: ChunkingConfig = {}): Chunk[
     return [];
   }
   
-  // For now, use character-based chunking as it's more reliable
-  // We'll enhance this with proper tokenization later
   const chunks: Chunk[] = [];
   let chunkIndex = 0;
   let startIdx = 0;
   
-  // Calculate approximate characters per token (rough estimate)
+  // Use accurate token counting when possible, fallback to character approximation
+  const useAccurateTokens = true;
+  
+  // For character-based indexing, we still need approximate char positions
   const avgCharsPerToken = 4;
   const charChunkSize = chunkSize * avgCharsPerToken;
   const charOverlap = overlap * avgCharsPerToken;
@@ -81,13 +94,16 @@ export function naiveChunking(text: string, config: ChunkingConfig = {}): Chunk[
     const chunkText = text.slice(startIdx, endIdx).trim();
     
     if (chunkText.length > 0) {
+      // Use accurate token count
+      const tokenCount = getTokenCount(chunkText);
+      
       chunks.push({
         text: chunkText,
         metadata: {
           index: chunkIndex,
           start_char: startIdx,
           end_char: endIdx,
-          tokens: Math.ceil(chunkText.length / avgCharsPerToken)
+          tokens: tokenCount
         }
       });
       chunkIndex++;
