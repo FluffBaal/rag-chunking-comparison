@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { 
   generateTestQuestions, 
-  retrieveChunks, 
+  retrieveChunks,
+  enhancedRetrieveChunks, 
   generateAnswer, 
   calculateRAGASMetrics 
 } from '@/lib/evaluation/ragas';
+import OpenAI from 'openai';
 
 export async function POST(request: NextRequest) {
   try {
@@ -127,7 +129,7 @@ export async function POST(request: NextRequest) {
 }
 
 async function evaluateStrategy(
-  chunks: Array<{ text: string }>, 
+  chunks: Array<{ text: string; embedding?: number[] }>, 
   questions: any[],
   config: any
 ) {
@@ -144,9 +146,32 @@ async function evaluateStrategy(
     questions = [];
   }
   
+  // Initialize OpenAI client if API key is provided
+  let openai: OpenAI | undefined;
+  if (config.apiKey) {
+    openai = new OpenAI({ 
+      apiKey: config.apiKey,
+      dangerouslyAllowBrowser: true 
+    });
+  }
+  
   for (const question of questions) {
-    // Retrieve relevant chunks
-    const retrieved = retrieveChunks(question.question, chunks, 3);
+    // Use enhanced retrieval with embeddings when API key is available
+    let retrieved: Array<{ text: string }>;
+    if (openai) {
+      // Use embedding-based retrieval
+      retrieved = await enhancedRetrieveChunks(
+        question.question, 
+        chunks, 
+        3,
+        'hybrid-embedding', // Use hybrid approach for best results
+        openai
+      );
+    } else {
+      // Fall back to keyword-based retrieval
+      retrieved = retrieveChunks(question.question, chunks, 3);
+    }
+    
     retrievals.push(retrieved);
     
     // Generate answer

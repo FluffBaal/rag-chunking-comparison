@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { naiveChunking, calculateNaiveMetrics } from '@/lib/chunking/naive';
 import { semanticChunking, calculateSemanticMetrics } from '@/lib/chunking/semantic';
-import { chunkCache } from '@/lib/cache/browser-cache';
+import { computeChunkEmbeddings } from '@/lib/evaluation/embedding-retrieval';
+import OpenAI from 'openai';
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
     const startTime = Date.now();
     
     // Perform naive chunking
-    const naiveChunks = naiveChunking(documentText, {
+    let naiveChunks = naiveChunking(documentText, {
       chunk_size: config?.chunk_size || 400,
       overlap: config?.overlap || 50,
       model: config?.model || 'gpt-3.5-turbo'
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
     const naiveMetrics = calculateNaiveMetrics(naiveChunks);
     
     // Perform semantic chunking
-    const semanticChunks = await semanticChunking(documentText, {
+    let semanticChunks = await semanticChunking(documentText, {
       similarity_threshold: config?.similarity_threshold || 0.7,
       max_tokens: config?.max_tokens || 400,
       min_tokens: config?.min_tokens || 75,
@@ -50,6 +51,23 @@ export async function POST(request: NextRequest) {
     });
     
     const semanticMetrics = calculateSemanticMetrics(semanticChunks);
+    
+    // Compute embeddings for all chunks if API key is provided
+    if (apiKey) {
+      try {
+        const openai = new OpenAI({ 
+          apiKey,
+          dangerouslyAllowBrowser: true 
+        });
+        
+        // Compute embeddings for both naive and semantic chunks
+        naiveChunks = await computeChunkEmbeddings(naiveChunks, openai);
+        semanticChunks = await computeChunkEmbeddings(semanticChunks, openai);
+      } catch (error) {
+        console.error('Error computing embeddings:', error);
+        // Continue without embeddings if there's an error
+      }
+    }
     
     // Calculate comparison metrics
     const coherenceImprovement = ((semanticMetrics.coherence_score - naiveMetrics.coherence_score) / naiveMetrics.coherence_score) * 100;

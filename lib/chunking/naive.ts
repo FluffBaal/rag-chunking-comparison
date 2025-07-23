@@ -8,6 +8,7 @@ export interface Chunk {
     end_char?: number;
     tokens?: number;
   };
+  embedding?: number[];
 }
 
 export interface ChunkingConfig {
