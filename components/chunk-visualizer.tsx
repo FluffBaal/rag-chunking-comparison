@@ -26,6 +26,18 @@ export function ChunkVisualizer({ naiveChunks, semanticChunks }: ChunkVisualizer
   };
 
   const getChunkStats = (chunks: Array<string | { text: string; metadata?: any }>) => {
+    // Defensive check for chunks array
+    if (!chunks || !Array.isArray(chunks) || chunks.length === 0) {
+      return {
+        count: 0,
+        avgLength: 0,
+        minLength: 0,
+        maxLength: 0,
+        avgWords: 0,
+        totalWords: 0
+      };
+    }
+    
     const chunkTexts = chunks.map(getChunkText);
     const lengths = chunkTexts.map(text => text.length);
     const wordCounts = chunkTexts.map(text => text.split(/\s+/).length);
@@ -43,8 +55,17 @@ export function ChunkVisualizer({ naiveChunks, semanticChunks }: ChunkVisualizer
   const naiveStats = getChunkStats(naiveChunks);
   const semanticStats = getChunkStats(semanticChunks);
 
-  const renderChunks = (chunks: string[], type: 'naive' | 'semantic') => {
+  const renderChunks = (chunks: Array<string | { text: string; metadata?: any }>, type: 'naive' | 'semantic') => {
     const colorClass = type === 'naive' ? 'chunk-naive' : 'chunk-semantic';
+    
+    // Defensive check for chunks array
+    if (!chunks || !Array.isArray(chunks) || chunks.length === 0) {
+      return (
+        <div className="text-center text-muted-foreground p-4">
+          No chunks available
+        </div>
+      );
+    }
     
     return (
       <div className="space-y-2">

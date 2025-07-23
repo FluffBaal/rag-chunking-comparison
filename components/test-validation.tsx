@@ -64,7 +64,26 @@ export function TestValidation({ naiveDetails, semanticDetails, testDataset, nai
     );
   }
 
-  const questions = naiveDetails.questions;
+  const questions = naiveDetails.questions || [];
+  
+  // Additional validation to ensure we have the required arrays
+  if (!questions || !Array.isArray(questions) || questions.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-6 text-center text-muted-foreground">
+          <AlertCircle className="h-8 w-8 mx-auto mb-2" />
+          <p>No questions available in the test data.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  // Ensure all arrays exist with proper defaults
+  const naiveAnswers = naiveDetails.answers || [];
+  const semanticAnswers = semanticDetails.answers || [];
+  const naiveContexts = naiveDetails.contexts || [];
+  const semanticContexts = semanticDetails.contexts || [];
+  const groundTruths = naiveDetails.ground_truths || [];
 
   return (
     <div className="space-y-6">
@@ -131,7 +150,7 @@ export function TestValidation({ naiveDetails, semanticDetails, testDataset, nai
                           </div>
                         )}
                       </div>
-                      <p className="text-sm">{naiveDetails.answers[index]}</p>
+                      <p className="text-sm">{naiveAnswers[index] || 'No answer generated'}</p>
                       {naiveMetrics && naiveMetrics[index] && (
                         <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
                           <div className="flex justify-between">
@@ -158,7 +177,7 @@ export function TestValidation({ naiveDetails, semanticDetails, testDataset, nai
                           </div>
                         )}
                       </div>
-                      <p className="text-sm">{semanticDetails.answers[index]}</p>
+                      <p className="text-sm">{semanticAnswers[index] || 'No answer generated'}</p>
                       {semanticMetrics && semanticMetrics[index] && (
                         <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
                           <div className="flex justify-between">
@@ -178,7 +197,7 @@ export function TestValidation({ naiveDetails, semanticDetails, testDataset, nai
                     {/* Naive Contexts */}
                     <div className="space-y-2">
                       <Badge variant="outline">Naive Chunking - Retrieved Contexts</Badge>
-                      {naiveDetails.contexts[index] && naiveDetails.contexts[index].length > 0 ? naiveDetails.contexts[index].map((context, ctxIndex) => (
+                      {naiveContexts[index] && Array.isArray(naiveContexts[index]) && naiveContexts[index].length > 0 ? naiveContexts[index].map((context, ctxIndex) => (
                         <div key={ctxIndex} className="bg-muted/30 rounded p-2">
                           <span className="text-xs text-muted-foreground">Context {ctxIndex + 1}:</span>
                           <p className="text-sm mt-1 whitespace-pre-wrap">
@@ -193,7 +212,7 @@ export function TestValidation({ naiveDetails, semanticDetails, testDataset, nai
                     {/* Semantic Contexts */}
                     <div className="space-y-2">
                       <Badge variant="default">Semantic Chunking - Retrieved Contexts</Badge>
-                      {semanticDetails.contexts[index] && semanticDetails.contexts[index].length > 0 ? semanticDetails.contexts[index].map((context, ctxIndex) => (
+                      {semanticContexts[index] && Array.isArray(semanticContexts[index]) && semanticContexts[index].length > 0 ? semanticContexts[index].map((context, ctxIndex) => (
                         <div key={ctxIndex} className="bg-muted/30 rounded p-2">
                           <span className="text-xs text-muted-foreground">Context {ctxIndex + 1}:</span>
                           <p className="text-sm mt-1 whitespace-pre-wrap">
