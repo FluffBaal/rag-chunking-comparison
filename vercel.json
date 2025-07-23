@@ -1,8 +1,11 @@
 {
   "regions": ["iad1"],
   "framework": "nextjs",
-  "buildCommand": "npm run build:vercel",
+  "buildCommand": "rm -rf .next && npm run build:vercel",
   "outputDirectory": ".next",
-  "installCommand": "npm install"
+  "installCommand": "npm install",
+  "env": {
+    "CACHE_VERSION": "v2"
+  }
 }
 
