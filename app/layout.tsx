@@ -41,11 +41,6 @@ export default function RootLayout({
           <main className="container mx-auto px-4 py-8">
             {children}
           </main>
-          <footer className="border-t mt-16">
-            <div className="container mx-auto px-4 py-6 text-center text-muted-foreground">
-              <p>© 2025 RAG Chunking Comparison. Built with Next.js 15 and Vercel.</p>
-            </div>
-          </footer>
         </div>
       </body>
     </html>

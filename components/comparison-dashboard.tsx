@@ -394,11 +394,11 @@ export function ComparisonDashboard() {
 
             <TabsContent value="validation" className="space-y-4">
               <TestValidation 
-                naiveDetails={results.naive.rag_details}
-                semanticDetails={results.semantic.rag_details}
+                naiveDetails={results.naive?.rag_details}
+                semanticDetails={results.semantic?.rag_details}
                 testDataset={results.test_dataset}
-                naiveMetrics={results.naive.per_question_metrics}
-                semanticMetrics={results.semantic.per_question_metrics}
+                naiveMetrics={results.naive?.per_question_metrics}
+                semanticMetrics={results.semantic?.per_question_metrics}
               />
             </TabsContent>
           </Tabs>
