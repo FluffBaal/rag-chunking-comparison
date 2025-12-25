@@ -43,7 +43,7 @@
     "lucide-react": "^0.460.0",
     "ml-matrix": "^6.11.1",
     "natural": "^8.0.1",
-    "next": "^15.4.2",
+    "next": "15.4.10",
     "openai": "^4.67.0",
     "pdf-parse": "^1.1.1",
     "pdfjs-dist": "^5.3.93",
